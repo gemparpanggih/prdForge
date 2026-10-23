@@ -9,6 +9,7 @@ import type { ProjectSummary } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Label, Textarea } from "@/components/ui/input";
+import { usePreferences } from "@/components/preferences-provider";
 
 const EXAMPLES = [
   {
@@ -43,6 +44,7 @@ const EXAMPLES = [
 
 export function NewProjectForm({ initialType }: { initialType?: string }) {
   const router = useRouter();
+  const { t } = usePreferences();
   const [name, setName] = useState("");
   const [productType, setProductType] = useState(initialType || "CRM");
   const [summary, setSummary] = useState("");
@@ -57,11 +59,11 @@ export function NewProjectForm({ initialType }: { initialType?: string }) {
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (name.trim().length < 2) {
-      toast.error("Give the project a name with at least 2 characters.");
+      toast.error(t("Give the project a name with at least 2 characters."));
       return;
     }
     if (summary.trim().length < 10) {
-      toast.error("Add a short brief so the interview has context.");
+      toast.error(t("Add a short brief so the interview has context."));
       return;
     }
     setSubmitting(true);
@@ -72,11 +74,11 @@ export function NewProjectForm({ initialType }: { initialType?: string }) {
         body: JSON.stringify({ name, productType, summary }),
       });
       const payload = (await response.json()) as ProjectSummary & { error?: string };
-      if (!response.ok) throw new Error(payload.error || "Could not create the project.");
-      toast.success("Project created. Starting discovery.");
+      if (!response.ok) throw new Error(payload.error || t("Could not create the project."));
+      toast.success(t("Project created. Starting discovery."));
       router.push(`/projects/${payload.id}/interview`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not create the project.");
+      toast.error(error instanceof Error ? error.message : t("Could not create the project."));
       setSubmitting(false);
     }
   }
@@ -89,27 +91,26 @@ export function NewProjectForm({ initialType }: { initialType?: string }) {
         className="mb-7 inline-flex items-center gap-1.5 text-xs text-muted transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        Back to projects
+        {t("Back to projects")}
       </button>
 
       <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
         <div>
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/[0.06] px-3 py-1 text-[11px] font-medium text-accent">
             <Sparkles className="h-3 w-3" />
-            New blueprint
+            {t("New blueprint")}
           </div>
           <h1 className="text-3xl font-semibold tracking-[-0.04em] text-foreground">
-            What are you building?
+            {t("What are you building?")}
           </h1>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">
-            Start with the smallest useful brief. The discovery interview will fill in users,
-            scope, data, constraints, and non-functional requirements.
+            {t("Start with the smallest useful brief. The discovery interview will fill in users, scope, data, constraints, and non-functional requirements.")}
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-6">
             <div className="grid gap-5 md:grid-cols-2">
               <div>
-                <Label htmlFor="project-name">Project name</Label>
+                <Label htmlFor="project-name">{t("Project name")}</Label>
                 <Input
                   id="project-name"
                   value={name}
@@ -120,7 +121,7 @@ export function NewProjectForm({ initialType }: { initialType?: string }) {
                 />
               </div>
               <div>
-                <Label htmlFor="product-type">Product type</Label>
+                <Label htmlFor="product-type">{t("Product type")}</Label>
                 <select
                   id="product-type"
                   value={productType}
@@ -129,7 +130,7 @@ export function NewProjectForm({ initialType }: { initialType?: string }) {
                 >
                   {PRODUCT_TYPES.map((type) => (
                     <option key={type.value} value={type.value}>
-                      {type.label}
+                      {t(type.label)}
                     </option>
                   ))}
                 </select>
@@ -137,23 +138,23 @@ export function NewProjectForm({ initialType }: { initialType?: string }) {
             </div>
 
             <div>
-              <Label htmlFor="project-summary">Short brief</Label>
+              <Label htmlFor="project-summary">{t("Short brief")}</Label>
               <Textarea
                 id="project-summary"
                 value={summary}
                 onChange={(event) => setSummary(event.target.value)}
-                placeholder="Who is it for, what problem does it solve, and what must the first release do?"
+                placeholder={t("Who is it for, what problem does it solve, and what must the first release do?")}
                 rows={7}
                 maxLength={4000}
               />
               <div className="mt-1.5 flex items-center justify-between text-[11px] text-muted">
-                <span>A paragraph is enough. Be specific about the user and the pain.</span>
+                <span>{t("A paragraph is enough. Be specific about the user and the pain.")}</span>
                 <span>{summary.length}/4000</span>
               </div>
             </div>
 
             <div>
-              <Label>Or start from an example</Label>
+              <Label>{t("Or start from an example")}</Label>
               <div className="flex flex-wrap gap-2">
                 {EXAMPLES.map((example) => (
                   <button
@@ -162,7 +163,7 @@ export function NewProjectForm({ initialType }: { initialType?: string }) {
                     onClick={() => applyExample(example)}
                     className="rounded-lg border border-border bg-surface-raised px-2.5 py-1.5 text-[11px] text-muted-strong transition-colors hover:border-accent/30 hover:text-foreground"
                   >
-                    {example.label}
+                    {t(example.label)}
                   </button>
                 ))}
               </div>
@@ -175,10 +176,10 @@ export function NewProjectForm({ initialType }: { initialType?: string }) {
                 ) : (
                   <ArrowRight className="h-4 w-4" />
                 )}
-                {submitting ? "Creating project…" : "Start discovery interview"}
+                {submitting ? t("Creating project…") : t("Start discovery interview")}
               </Button>
               <Button type="button" variant="ghost" onClick={() => router.push("/")} disabled={submitting}>
-                Cancel
+                {t("Cancel")}
               </Button>
             </div>
           </form>
@@ -187,14 +188,14 @@ export function NewProjectForm({ initialType }: { initialType?: string }) {
         <div className="space-y-3">
           <Card className="p-5">
             <div className="text-[11px] font-medium uppercase tracking-[0.16em] text-accent">
-              What happens next
+              {t("What happens next")}
             </div>
             <ol className="mt-4 space-y-4">
               {[
-                ["Focused interview", "3–6 rounds of specific questions. Skip anything you do not know; assumptions are recorded."],
-                ["Structured blueprint", "PRD, requirements with acceptance criteria, technical baseline, flow, and wireframes."],
-                ["Execution plan", "Dependency-ordered tasks with test plans, Definition of Done, and agent prompts."],
-                ["Export", "A Markdown bundle and machine-readable JSON, validated before download."],
+                [t("Focused interview"), t("3–6 rounds of specific questions. Skip anything you do not know; assumptions are recorded.")],
+                [t("Structured blueprint"), t("PRD, requirements with acceptance criteria, technical baseline, flow, and wireframes.")],
+                [t("Execution plan"), t("Dependency-ordered tasks with test plans, Definition of Done, and agent prompts.")],
+                [t("Export"), t("A Markdown bundle and machine-readable JSON, validated before download.")],
               ].map(([title, description], index) => (
                 <li key={title} className="flex gap-3">
                   <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-accent/25 bg-accent/[0.08] text-[10px] font-semibold text-accent">
@@ -212,18 +213,18 @@ export function NewProjectForm({ initialType }: { initialType?: string }) {
           <Card className="border-accent/15 bg-accent/[0.03] p-5">
             <div className="flex items-center gap-2 text-xs font-medium text-foreground">
               <Check className="h-3.5 w-3.5 text-accent" />
-              No AI key required to start
+              {t("No AI key required to start")}
             </div>
             <p className="mt-1.5 text-[11px] leading-relaxed text-muted">
-              The local engine produces a complete blueprint. Add a provider later for tailored
-              synthesis and richer domain language.
+              {t("The local engine produces a complete blueprint. Add a provider later for tailored synthesis and richer domain language.")}
             </p>
           </Card>
 
           <div className="rounded-2xl border border-border bg-surface/40 p-5 text-[11px] leading-relaxed text-muted">
-            <span className="font-medium text-muted-strong">Tip:</span> name the primary user and
-            the decision they need to make. “Sales reps need to know which deals are stalled”
-            produces a sharper plan than “build a CRM”.
+            <span className="font-medium text-muted-strong">{t("Tip:")}</span>{" "}
+            {t(
+              "name the primary user and the decision they need to make. “Sales reps need to know which deals are stalled” produces a sharper plan than “build a CRM”.",
+            )}
           </div>
         </div>
       </div>

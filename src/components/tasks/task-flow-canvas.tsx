@@ -16,6 +16,7 @@ import "@xyflow/react/dist/style.css";
 import { CheckCircle2, Circle, Clock3, Flag } from "lucide-react";
 import type { Task, TaskStatus } from "@/lib/types";
 import { criticalPath, taskLayers } from "@/lib/task-graph";
+import { usePreferences } from "@/components/preferences-provider";
 import { cn } from "@/lib/utils";
 
 type TaskNodeData = { task: Task; critical: boolean; [key: string]: unknown };
@@ -29,13 +30,14 @@ const statusStyles: Record<TaskStatus, { label: string; className: string; icon:
 };
 
 function TaskNode({ data }: NodeProps<TaskCanvasNode>) {
+  const { t } = usePreferences();
   const task = data.task;
   const status = statusStyles[task.status];
   const StatusIcon = status.icon;
   return (
     <div
       className={cn(
-        "w-[222px] rounded-xl border px-3 py-2.5 shadow-[0_12px_32px_rgba(0,0,0,0.3)]",
+        "w-[222px] rounded-xl border px-3 py-2.5 shadow-[var(--card-shadow)]",
         status.className,
         data.critical && "ring-1 ring-accent/40",
       )}
@@ -44,13 +46,13 @@ function TaskNode({ data }: NodeProps<TaskCanvasNode>) {
         <span className="font-mono text-[9px] text-accent">{task.id}</span>
         <span className="inline-flex items-center gap-1 text-[8px] text-muted">
           <StatusIcon className="h-2.5 w-2.5" />
-          {status.label}
+          {t(status.label)}
         </span>
       </div>
       <div className="mt-1 line-clamp-2 text-[10px] font-medium leading-relaxed text-foreground">
         {task.title}
       </div>
-      <div className="mt-2 flex items-center justify-between border-t border-white/[0.05] pt-1.5 text-[8px] text-muted">
+      <div className="mt-2 flex items-center justify-between border-t border-border/60 pt-1.5 text-[8px] text-muted">
         <span className="capitalize">{task.type}</span>
         <span>{task.milestoneId}</span>
       </div>
@@ -86,7 +88,7 @@ export function TaskFlowCanvas({ tasks }: { tasks: Task[] }) {
         target: task.id,
         type: "smoothstep",
         style: {
-          stroke: critical.has(task.id) && critical.has(dependency) ? "#c6f26a" : "#343943",
+          stroke: critical.has(task.id) && critical.has(dependency) ? "var(--accent)" : "var(--flow-edge)",
           strokeWidth: critical.has(task.id) && critical.has(dependency) ? 2 : 1.4,
         },
       })),
@@ -108,25 +110,25 @@ export function TaskFlowCanvas({ tasks }: { tasks: Task[] }) {
           nodesDraggable={false}
           nodesConnectable={false}
           elementsSelectable
-          className="bg-[#0b0c0f]"
+          className="bg-[var(--flow-bg)]"
         >
-          <Background variant={BackgroundVariant.Dots} gap={18} size={1} color="#22252b" />
+          <Background variant={BackgroundVariant.Dots} gap={18} size={1} color="var(--flow-grid)" />
           <Controls position="bottom-left" showInteractive={false} />
           <MiniMap
             position="bottom-right"
             pannable
             zoomable
-            maskColor="rgba(5,6,8,0.75)"
-            style={{ backgroundColor: "#0b0c0f", bottom: 24 }}
+            maskColor="var(--flow-mask)"
+            style={{ backgroundColor: "var(--flow-bg)", bottom: 24 }}
             nodeColor={(node) => {
               const task = (node.data as TaskNodeData)?.task;
               return task?.status === "done"
-                ? "#5eead4"
+                ? "var(--success)"
                 : task?.status === "blocked"
                   ? "#fb7185"
                   : task?.status === "in_progress"
-                    ? "#7dd3fc"
-                    : "#4b515c";
+                    ? "var(--info)"
+                    : "var(--flow-edge)";
             }}
           />
         </ReactFlow>

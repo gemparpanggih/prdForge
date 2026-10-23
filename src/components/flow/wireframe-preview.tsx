@@ -1,4 +1,7 @@
+"use client";
+
 import type { Wireframe, WireframeBlock } from "@/lib/types";
+import { usePreferences } from "@/components/preferences-provider";
 import { cn } from "@/lib/utils";
 
 export function WireframePreview({
@@ -15,7 +18,7 @@ export function WireframePreview({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-xl border border-border bg-[#0b0c0f] shadow-[0_16px_40px_rgba(0,0,0,0.25)]",
+        "overflow-hidden rounded-xl border border-border bg-[var(--wireframe-bg)] shadow-[var(--card-shadow)]",
         className,
       )}
     >
@@ -42,7 +45,7 @@ export function WireframePreview({
               <div
                 key={item}
                 className={cn(
-                  "truncate rounded-md bg-white/[0.03] px-1.5 py-1 text-muted",
+                  "truncate rounded-md bg-foreground/[0.03] px-1.5 py-1 text-muted",
                   compact ? "text-[6.5px]" : "text-[9px]",
                 )}
               >
@@ -67,12 +70,13 @@ export function WireframePreview({
 }
 
 function Block({ block, compact }: { block: WireframeBlock; compact: boolean }) {
+  const { t } = usePreferences();
   const text = compact ? "text-[6.5px]" : "text-[9px]";
   const title = compact ? "text-[7px]" : "text-[10px]";
   switch (block.type) {
     case "header":
       return (
-        <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-white/[0.02] px-2 py-1.5">
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-foreground/[0.02] px-2 py-1.5">
           <div className={cn("font-medium text-muted-strong", title)}>{block.title || "Header"}</div>
           <div className="flex gap-1">
             {block.items.slice(0, 3).map((item) => (
@@ -87,7 +91,7 @@ function Block({ block, compact }: { block: WireframeBlock; compact: boolean }) 
       return (
         <div className={cn("grid gap-1.5", compact ? "grid-cols-2" : "grid-cols-4")}>
           {block.items.slice(0, 4).map((item, index) => (
-            <div key={item} className="rounded-lg border border-border bg-white/[0.02] p-1.5">
+            <div key={item} className="rounded-lg border border-border bg-foreground/[0.02] p-1.5">
               <div className={cn("text-muted", text)}>{item}</div>
               <div className={cn("mt-1 font-semibold text-foreground", compact ? "text-[10px]" : "text-sm")}>
                 {[24, 8, 82, 3][index] ?? 12}
@@ -98,7 +102,7 @@ function Block({ block, compact }: { block: WireframeBlock; compact: boolean }) 
       );
     case "chart":
       return (
-        <div className="rounded-lg border border-border bg-white/[0.02] p-2">
+        <div className="rounded-lg border border-border bg-foreground/[0.02] p-2">
           <div className={cn("mb-2 text-muted", text)}>{block.title || "Chart"}</div>
           <div className="flex h-12 items-end gap-1">
             {[30, 52, 44, 68, 38, 76, 58, 84, 48, 66].map((height, index) => (
@@ -114,9 +118,9 @@ function Block({ block, compact }: { block: WireframeBlock; compact: boolean }) 
     case "table":
       return (
         <div className="overflow-hidden rounded-lg border border-border">
-          <div className="flex items-center justify-between bg-white/[0.03] px-2 py-1.5">
+          <div className="flex items-center justify-between bg-foreground/[0.03] px-2 py-1.5">
             <span className={cn("font-medium text-muted-strong", title)}>{block.title || "Table"}</span>
-            <span className={cn("rounded bg-accent/10 px-1.5 py-0.5 text-accent", text)}>View all</span>
+            <span className={cn("rounded bg-accent/10 px-1.5 py-0.5 text-accent", text)}>{t("View all")}</span>
           </div>
           <div className="grid grid-cols-4 gap-2 border-b border-border px-2 py-1 text-muted">
             {block.items.slice(0, 4).map((item) => (
@@ -136,7 +140,7 @@ function Block({ block, compact }: { block: WireframeBlock; compact: boolean }) 
       );
     case "form":
       return (
-        <div className="rounded-lg border border-border bg-white/[0.02] p-2">
+        <div className="rounded-lg border border-border bg-foreground/[0.02] p-2">
           <div className={cn("mb-2 font-medium text-muted-strong", title)}>{block.title || "Form"}</div>
           <div className={cn("grid gap-1.5", compact ? "grid-cols-1" : "grid-cols-2")}>
             {block.items.slice(0, 6).map((item) => (
@@ -169,7 +173,7 @@ function Block({ block, compact }: { block: WireframeBlock; compact: boolean }) 
       );
     case "list":
       return (
-        <div className="rounded-lg border border-border bg-white/[0.02] p-2">
+        <div className="rounded-lg border border-border bg-foreground/[0.02] p-2">
           <div className={cn("mb-1.5 font-medium text-muted-strong", title)}>{block.title || "Activity"}</div>
           {block.items.slice(0, 4).map((item) => (
             <div key={item} className="flex items-center gap-1.5 border-b border-border/50 py-1 last:border-0">
@@ -183,7 +187,7 @@ function Block({ block, compact }: { block: WireframeBlock; compact: boolean }) 
       return (
         <div className="grid grid-cols-3 gap-1.5">
           {["To do", "In progress", "Done"].map((column) => (
-            <div key={column} className="rounded-lg border border-border bg-white/[0.02] p-1.5">
+            <div key={column} className="rounded-lg border border-border bg-foreground/[0.02] p-1.5">
               <div className={cn("mb-1 text-muted", text)}>{column}</div>
               {block.items.slice(0, 2).map((item) => (
                 <div key={`${column}-${item}`} className={cn("mb-1 rounded border border-border bg-surface px-1 py-1 text-muted-strong", text)}>
@@ -196,13 +200,13 @@ function Block({ block, compact }: { block: WireframeBlock; compact: boolean }) 
       );
     case "detail":
       return (
-        <div className="rounded-lg border border-border bg-white/[0.02] p-2">
+        <div className="rounded-lg border border-border bg-foreground/[0.02] p-2">
           <div className={cn("mb-1.5 font-medium text-muted-strong", title)}>{block.title || "Details"}</div>
           <div className="space-y-1">
             {block.items.map((item) => (
               <div key={item} className="flex items-center justify-between gap-2">
                 <span className={cn("text-muted", text)}>{item}</span>
-                <span className={cn("h-2 w-12 rounded bg-white/[0.06]", compact ? "w-8" : "w-14")} />
+                <span className={cn("h-2 w-12 rounded bg-foreground/[0.06]", compact ? "w-8" : "w-14")} />
               </div>
             ))}
           </div>

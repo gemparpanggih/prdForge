@@ -4,6 +4,7 @@ import { ArrowRight, Trash2, X } from "lucide-react";
 import type { FlowEdge } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select } from "@/components/ui/input";
+import { usePreferences } from "@/components/preferences-provider";
 import type { FlowCanvasEdge, FlowCanvasNode } from "./flow-types";
 
 export function EdgeInspector({
@@ -19,6 +20,7 @@ export function EdgeInspector({
   onDelete: () => void;
   onClose: () => void;
 }) {
+  const { t } = usePreferences();
   const source = nodes.find((node) => node.id === edge.source)?.data.node;
   const target = nodes.find((node) => node.id === edge.target)?.data.node;
   const kind = edge.data?.kind ?? "default";
@@ -27,10 +29,10 @@ export function EdgeInspector({
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div>
-          <div className="text-xs font-semibold">Edge inspector</div>
-          <div className="text-[9px] uppercase tracking-[0.14em] text-muted">Connection</div>
+          <div className="text-xs font-semibold">{t("Edge inspector")}</div>
+          <div className="text-[9px] uppercase tracking-[0.14em] text-muted">{t("Connection")}</div>
         </div>
-        <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close inspector">
+        <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label={t("Close")}>
           <X className="h-3.5 w-3.5" />
         </Button>
       </div>
@@ -43,32 +45,32 @@ export function EdgeInspector({
           </div>
         </div>
         <div>
-          <Label>Label</Label>
+          <Label>{t("Label")}</Label>
           <Input
             value={typeof edge.label === "string" ? edge.label : ""}
-            placeholder="Trigger or condition"
+            placeholder={t("Trigger or condition")}
             onChange={(event) => onChange({ label: event.target.value })}
           />
         </div>
         <div>
-          <Label>Path type</Label>
+          <Label>{t("Path type")}</Label>
           <Select
             value={kind}
             onChange={(event) => onChange({ kind: event.target.value as FlowEdge["kind"] })}
           >
-            <option value="default">Default</option>
-            <option value="success">Success</option>
-            <option value="failure">Failure / alternative</option>
+            <option value="default">{t("Default")}</option>
+            <option value="success">{t("Success")}</option>
+            <option value="failure">{t("Failure / alternative")}</option>
           </Select>
           <p className="mt-1 text-[10px] leading-relaxed text-muted">
-            Failure paths are rendered as dashed red edges. Success paths use the accent color.
+            {t("Failure paths are rendered as dashed red edges. Success paths use the accent color.")}
           </p>
         </div>
       </div>
       <div className="border-t border-border p-3">
         <Button variant="danger" size="sm" className="w-full" onClick={onDelete}>
           <Trash2 className="h-3.5 w-3.5" />
-          Delete edge
+          {t("Delete edge")}
         </Button>
       </div>
     </div>

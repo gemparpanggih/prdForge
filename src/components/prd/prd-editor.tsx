@@ -44,6 +44,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Input, Label, Select, Switch, Textarea } from "@/components/ui/input";
 import { Progress, ScoreRing } from "@/components/ui/progress";
+import { usePreferences } from "@/components/preferences-provider";
 import { cn, formatRelative } from "@/lib/utils";
 
 type SectionKey =
@@ -99,6 +100,7 @@ export function PrdEditor({
   versions: { version: number; createdAt: string; status: string; readiness: number }[];
 }) {
   const router = useRouter();
+  const { language, t } = usePreferences();
   const [content, setContent] = useState(initialContent);
   const [active, setActive] = useState<SectionKey>("document");
   const [saveState, setSaveState] = useState<SaveState>("idle");
@@ -130,20 +132,20 @@ export function PrdEditor({
           readiness?: ReadinessReport;
           error?: string;
         };
-        if (!response.ok) throw new Error(payload.error || "Could not save the PRD.");
+        if (!response.ok) throw new Error(payload.error || t("Could not save the PRD."));
         dirty.current = false;
         setSaveState("saved");
         if (payload.readiness) setReadiness(payload.readiness);
         if (createVersion) {
-          toast.success(`Saved as version ${payload.version}.`);
+          toast.success(t("Saved as version {version}.", { version: payload.version ?? "" }));
           router.refresh();
         }
       } catch (error) {
         setSaveState("error");
-        toast.error(error instanceof Error ? error.message : "Could not save the PRD.");
+        toast.error(error instanceof Error ? error.message : t("Could not save the PRD."));
       }
     },
-    [projectId, router],
+    [projectId, router, t],
   );
 
   useEffect(() => {
@@ -175,14 +177,14 @@ export function PrdEditor({
 
   const saveLabel =
     saveState === "saving"
-      ? "Saving…"
+      ? t("Saving…")
       : saveState === "saved"
-        ? "Saved"
+        ? t("Saved")
         : saveState === "unsaved"
-          ? "Unsaved changes"
+          ? t("Unsaved changes")
           : saveState === "error"
-            ? "Save failed"
-            : "All changes saved";
+            ? t("Save failed")
+            : t("All changes saved");
 
   return (
     <div className="mx-auto w-full max-w-[1500px] px-4 py-5 md:px-6">
@@ -212,15 +214,15 @@ export function PrdEditor({
                         "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[11px] transition-colors",
                         activeSection
                           ? "bg-accent/[0.08] text-foreground"
-                          : "text-muted hover:bg-white/[0.03] hover:text-foreground",
+                          : "text-muted hover:bg-foreground/[0.03] hover:text-foreground",
                       )}
                     >
                       <section.icon
                         className={cn("h-3.5 w-3.5", activeSection ? "text-accent" : "text-muted")}
                       />
-                      <span className="flex-1">{section.label}</span>
+                      <span className="flex-1">{t(section.label)}</span>
                       {count !== null ? (
-                        <span className="rounded-full bg-white/[0.05] px-1.5 py-0.5 text-[9px] text-muted">
+                        <span className="rounded-full bg-foreground/[0.05] px-1.5 py-0.5 text-[9px] text-muted">
                           {count}
                         </span>
                       ) : null}
@@ -231,8 +233,8 @@ export function PrdEditor({
               </nav>
             </Card>
             <div className="px-1 text-[10px] leading-relaxed text-muted">
-              Autosaves to the current version. Use <span className="text-muted-strong">Save version</span> to
-              create an immutable snapshot.
+              {t("Autosaves to the current version.")} <span className="text-muted-strong">{t("Save version")}</span>{" "}
+              {t("Creates an immutable snapshot.")}
             </div>
           </div>
         </aside>
@@ -241,7 +243,7 @@ export function PrdEditor({
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface/70 px-4 py-3">
             <div>
               <div className="text-sm font-semibold tracking-tight">
-                {SECTIONS.find((section) => section.key === active)?.label}
+                {t(SECTIONS.find((section) => section.key === active)?.label ?? "")}
               </div>
               <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-muted">
                 {saveState === "saving" ? (
@@ -259,14 +261,14 @@ export function PrdEditor({
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" onClick={() => setPreviewOpen(true)}>
                 <Eye className="h-3.5 w-3.5" />
-                Preview
+                {t("Preview")}
               </Button>
               <Button variant="secondary" size="sm" onClick={() => save(false)} disabled={saveState === "saving"}>
                 <Save className="h-3.5 w-3.5" />
-                Save
+                {t("Save")}
               </Button>
               <Button size="sm" onClick={() => save(true)} disabled={saveState === "saving"}>
-                Save version
+                {t("Save version")}
               </Button>
             </div>
           </div>
@@ -285,13 +287,13 @@ export function PrdEditor({
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-muted">
-                    Document health
+                    {t("Document health")}
                   </div>
                   <div className="mt-0.5 text-[10px] text-muted">
-                    {readiness.canExport ? "Ready to export" : "Needs attention"}
+                    {readiness.canExport ? t("Ready to export") : t("Needs attention")}
                   </div>
                 </div>
-                <ScoreRing score={readiness.score} size={64} label="Score" />
+                <ScoreRing score={readiness.score} size={64} label={t("Score")} />
               </div>
               <Progress
                 value={readiness.score}
@@ -299,33 +301,33 @@ export function PrdEditor({
                 indicatorClassName={readiness.canExport ? "bg-accent" : "bg-warning"}
               />
               <div className="mt-3 grid grid-cols-2 gap-2 text-center">
-                <Stat label="Requirements" value={counts.requirements} />
-                <Stat label="NFRs" value={counts.nfrs} />
-                <Stat label="Risks" value={counts.risks} />
-                <Stat label="Questions" value={counts.questions} />
+                <Stat label={t("Requirements")} value={counts.requirements} />
+                <Stat label={t("NFRs")} value={counts.nfrs} />
+                <Stat label={t("Risks")} value={counts.risks} />
+                <Stat label={t("Questions")} value={counts.questions} />
               </div>
               <div className="mt-3 flex flex-wrap gap-1.5">
-                <Badge variant="outline">{readiness.stats.coveredRequirements}/{readiness.stats.requirements} traced</Badge>
+                <Badge variant="outline">{readiness.stats.coveredRequirements}/{readiness.stats.requirements} {t("traced")}</Badge>
                 {readiness.issues.filter((issue) => issue.severity === "blocker").length ? (
                   <Badge variant="danger">
-                    {readiness.issues.filter((issue) => issue.severity === "blocker").length} blockers
+                    {readiness.issues.filter((issue) => issue.severity === "blocker").length} {t("blockers")}
                   </Badge>
                 ) : (
-                  <Badge variant="success">No blockers</Badge>
+                  <Badge variant="success">{t("No blockers")}</Badge>
                 )}
               </div>
             </Card>
 
             <Card className="p-4">
               <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-muted">
-                Version history
+                {t("Version history")}
               </div>
               <div className="mt-3 space-y-2">
                 {versions.slice(0, 6).map((version) => (
                   <div key={version.version} className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-[10px] text-muted-strong">v{version.version}</span>
-                      <span className="text-[10px] text-muted">{formatRelative(version.createdAt)}</span>
+                      <span className="text-[10px] text-muted">{formatRelative(version.createdAt, language)}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-[10px] text-muted">{version.readiness}%</span>
@@ -337,8 +339,7 @@ export function PrdEditor({
             </Card>
 
             <div className="rounded-2xl border border-border bg-surface/40 p-4 text-[10px] leading-relaxed text-muted">
-              Requirement IDs and flow links stay stable across edits. The readiness score updates
-              after each save and again on the Review page.
+              {t("Requirement IDs and flow links stay stable across edits. The readiness score updates after each save and again on the Review page.")}
             </div>
           </div>
         </aside>
@@ -347,8 +348,8 @@ export function PrdEditor({
       <Dialog
         open={previewOpen}
         onOpenChange={setPreviewOpen}
-        title="PRD preview"
-        description="Rendered from the structured content and current product flow."
+        title={t("PRD preview")}
+        description={t("Rendered from the structured content and current product flow.")}
         size="xl"
       >
         <div className="markdown-preview max-h-[65vh] overflow-y-auto pr-2">
@@ -381,12 +382,13 @@ function SectionBody({
   mutate: (updater: (current: PRDContent) => PRDContent) => void;
   projectName: string;
 }) {
+  const { t } = usePreferences();
   switch (section) {
     case "document":
       return (
-        <SectionShell title="Document" description="Identity, status, and the one-paragraph summary a busy reader needs.">
+        <SectionShell title={t("Document")} description={t("Identity, status, and the one-paragraph summary a busy reader needs.")}>
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Title">
+            <Field label={t("Title")}>
               <Input
                 value={content.metadata.title}
                 onChange={(event) =>
@@ -397,7 +399,7 @@ function SectionBody({
                 }
               />
             </Field>
-            <Field label="Owner">
+            <Field label={t("Owner")}>
               <Input
                 value={content.metadata.owner}
                 onChange={(event) =>
@@ -408,7 +410,7 @@ function SectionBody({
                 }
               />
             </Field>
-            <Field label="Status">
+            <Field label={t("Status")}>
               <Select
                 value={content.metadata.status}
                 onChange={(event) =>
@@ -421,18 +423,18 @@ function SectionBody({
                   }))
                 }
               >
-                <option value="draft">Draft</option>
-                <option value="in-review">In review</option>
-                <option value="approved">Approved</option>
+                <option value="draft">{t("Draft")}</option>
+                <option value="in-review">{t("In review")}</option>
+                <option value="approved">{t("Approved")}</option>
               </Select>
             </Field>
-            <Field label="Version / date">
+            <Field label={t("Version / date")}>
               <div className="flex h-10 items-center rounded-xl border border-border bg-background/40 px-3 text-xs text-muted">
                 v{content.metadata.version} · {content.metadata.date}
               </div>
             </Field>
           </div>
-          <Field label="Executive summary">
+          <Field label={t("Executive summary")}>
             <Textarea
               rows={6}
               value={content.executiveSummary}
@@ -442,16 +444,17 @@ function SectionBody({
             />
           </Field>
           <div className="rounded-xl border border-border bg-background/30 p-3 text-[11px] leading-relaxed text-muted">
-            {projectName} · {content.functionalRequirements.length} requirements ·{" "}
-            {content.nonFunctionalRequirements.length} NFRs · {content.releasePlan.length} milestones
+            {projectName} · {content.functionalRequirements.length} {t("requirements")} ·{" "}
+            {content.nonFunctionalRequirements.length} {t("NFRs")} · {content.releasePlan.length}{" "}
+            {t("milestones")}
           </div>
         </SectionShell>
       );
 
     case "problem":
       return (
-        <SectionShell title="Problem & background" description="Make the pain concrete and the evidence inspectable.">
-          <Field label="Problem statement">
+        <SectionShell title={t("Problem & background")} description={t("Make the pain concrete and the evidence inspectable.")}>
+          <Field label={t("Problem statement")}>
             <Textarea
               rows={4}
               value={content.problem.statement}
@@ -463,7 +466,7 @@ function SectionBody({
               }
             />
           </Field>
-          <Field label="Current state">
+          <Field label={t("Current state")}>
             <Textarea
               rows={4}
               value={content.problem.currentState}
@@ -476,7 +479,7 @@ function SectionBody({
             />
           </Field>
           <ListEditor
-            label="Evidence and context"
+            label={t("Evidence and context")}
             items={content.problem.evidence}
             onChange={(items) =>
               mutate((current) => ({
@@ -492,8 +495,8 @@ function SectionBody({
     case "goals":
       return (
         <SectionShell
-          title="Goals & success metrics"
-          description="Outcomes, measurable targets, and the things you deliberately will not optimize."
+          title={t("Goals & success metrics")}
+          description={t("Outcomes, measurable targets, and the things you deliberately will not optimize.")}
           action={
             <Button
               variant="secondary"
@@ -511,22 +514,22 @@ function SectionBody({
                 }))
               }
             >
-              <Plus className="h-3.5 w-3.5" /> Objective
+              <Plus className="h-3.5 w-3.5" /> {t("Objective")}
             </Button>
           }
         >
           <GoalList
-            label="Objectives"
+            label={t("Objectives")}
             items={content.goals.objectives}
             onChange={(items) => mutate((current) => ({ ...current, goals: { ...current.goals, objectives: items } }))}
           />
           <GoalList
-            label="Success metrics"
+            label={t("Success metrics")}
             items={content.goals.successMetrics}
             onChange={(items) => mutate((current) => ({ ...current, goals: { ...current.goals, successMetrics: items } }))}
           />
           <ListEditor
-            label="Non-goals"
+            label={t("Non-goals")}
             items={content.goals.nonGoals}
             onChange={(items) => mutate((current) => ({ ...current, goals: { ...current.goals, nonGoals: items } }))}
             hint="Explicit exclusions protect the first release from scope creep."
@@ -537,8 +540,8 @@ function SectionBody({
     case "personas":
       return (
         <SectionShell
-          title="Personas"
-          description="Roles with goals and friction. Keep them grounded in the discovery answers."
+          title={t("Personas")}
+          description={t("Roles with goals and friction. Keep them grounded in the discovery answers.")}
           action={
             <Button
               variant="secondary"
@@ -553,14 +556,14 @@ function SectionBody({
                 }))
               }
             >
-              <Plus className="h-3.5 w-3.5" /> Persona
+              <Plus className="h-3.5 w-3.5" /> {t("Persona")}
             </Button>
           }
         >
           {content.personas.map((persona, index) => (
             <Card key={persona.id} className="space-y-3 p-4">
               <div className="flex items-center justify-between gap-2">
-                <span className="font-mono text-[10px] text-muted">Persona {index + 1}</span>
+                <span className="font-mono text-[10px] text-muted">{t("Persona")} {index + 1}</span>
                 <Button
                   variant="ghost"
                   size="icon-sm"
@@ -576,7 +579,7 @@ function SectionBody({
                 </Button>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                <Field label="Name">
+                <Field label={t("Name")}>
                   <Input
                     value={persona.name}
                     onChange={(event) =>
@@ -589,7 +592,7 @@ function SectionBody({
                     }
                   />
                 </Field>
-                <Field label="Role">
+                <Field label={t("Role")}>
                   <Input
                     value={persona.role}
                     onChange={(event) =>
@@ -604,7 +607,7 @@ function SectionBody({
                 </Field>
               </div>
               <ListEditor
-                label="Goals"
+                label={t("Goals")}
                 items={persona.goals}
                 onChange={(items) =>
                   mutate((current) => ({
@@ -617,7 +620,7 @@ function SectionBody({
                 compact
               />
               <ListEditor
-                label="Pain points"
+                label={t("Pain points")}
                 items={persona.painPoints}
                 onChange={(items) =>
                   mutate((current) => ({
@@ -637,8 +640,8 @@ function SectionBody({
     case "journeys":
       return (
         <SectionShell
-          title="User journeys"
-          description="The end-to-end path, including the trigger and the successful outcome."
+          title={t("User journeys")}
+          description={t("The end-to-end path, including the trigger and the successful outcome.")}
           action={
             <Button
               variant="secondary"
@@ -653,7 +656,7 @@ function SectionBody({
                 }))
               }
             >
-              <Plus className="h-3.5 w-3.5" /> Journey
+              <Plus className="h-3.5 w-3.5" /> {t("Journey")}
             </Button>
           }
         >
@@ -661,7 +664,7 @@ function SectionBody({
             <Card key={journey.id} className="space-y-3 p-4">
               <div className="flex items-center justify-between gap-2">
                 <div className="grid flex-1 gap-3 md:grid-cols-2">
-                  <Field label="Journey name">
+                  <Field label={t("Journey name")}>
                     <Input
                       value={journey.name}
                       onChange={(event) =>
@@ -674,7 +677,7 @@ function SectionBody({
                       }
                     />
                   </Field>
-                  <Field label="Persona">
+                  <Field label={t("Persona")}>
                     <Input
                       value={journey.persona}
                       onChange={(event) =>
@@ -720,31 +723,31 @@ function SectionBody({
 
     case "scope":
       return (
-        <SectionShell title="Scope & constraints" description="What ships, what does not, and what the plan assumes to be true.">
+        <SectionShell title={t("Scope & constraints")} description={t("What ships, what does not, and what the plan assumes to be true.")}>
           <div className="grid gap-4 md:grid-cols-2">
             <ListEditor
-              label="In scope"
+              label={t("In scope")}
               items={content.scope.inScope}
               onChange={(items) => mutate((current) => ({ ...current, scope: { ...current.scope, inScope: items } }))}
             />
             <ListEditor
-              label="Out of scope"
+              label={t("Out of scope")}
               items={content.scope.outOfScope}
               onChange={(items) => mutate((current) => ({ ...current, scope: { ...current.scope, outOfScope: items } }))}
             />
             <ListEditor
-              label="Assumptions"
+              label={t("Assumptions")}
               items={content.scope.assumptions}
               onChange={(items) => mutate((current) => ({ ...current, scope: { ...current.scope, assumptions: items } }))}
               hint="Anything the AI inferred belongs here."
             />
             <ListEditor
-              label="Constraints"
+              label={t("Constraints")}
               items={content.scope.constraints}
               onChange={(items) => mutate((current) => ({ ...current, scope: { ...current.scope, constraints: items } }))}
             />
             <ListEditor
-              label="Dependencies"
+              label={t("Dependencies")}
               items={content.scope.dependencies}
               onChange={(items) => mutate((current) => ({ ...current, scope: { ...current.scope, dependencies: items } }))}
             />
@@ -755,8 +758,8 @@ function SectionBody({
     case "requirements":
       return (
         <SectionShell
-          title="Functional requirements"
-          description="Every requirement needs observable acceptance criteria. IDs are stable references for tasks and flow nodes."
+          title={t("Functional requirements")}
+          description={t("Every requirement needs observable acceptance criteria. IDs are stable references for tasks and flow nodes.")}
           action={
             <Button
               variant="secondary"
@@ -784,7 +787,7 @@ function SectionBody({
                 })
               }
             >
-              <Plus className="h-3.5 w-3.5" /> Requirement
+              <Plus className="h-3.5 w-3.5" /> {t("Requirement")}
             </Button>
           }
         >
@@ -793,9 +796,9 @@ function SectionBody({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-[10px] text-accent">{requirement.id}</span>
-                  <Badge variant="outline">{requirement.source}</Badge>
+                  <Badge variant="outline">{t(requirement.source)}</Badge>
                   {requirement.flowNodeIds.length ? (
-                    <Badge variant="info">{requirement.flowNodeIds.length} flow links</Badge>
+                    <Badge variant="info">{requirement.flowNodeIds.length} {t("flow links")}</Badge>
                   ) : null}
                 </div>
                 <div className="flex items-center gap-1">
@@ -813,10 +816,10 @@ function SectionBody({
                       }))
                     }
                   >
-                    <option value="must">Must</option>
-                    <option value="should">Should</option>
-                    <option value="could">Could</option>
-                    <option value="wont">Won&apos;t</option>
+                    <option value="must">{t("Must")}</option>
+                    <option value="should">{t("Should")}</option>
+                    <option value="could">{t("Could")}</option>
+                    <option value="wont">{t("Won't")}</option>
                   </Select>
                   <StatusBadge status={requirement.status} />
                   <Button
@@ -836,7 +839,7 @@ function SectionBody({
                   </Button>
                 </div>
               </div>
-              <Field label="Title">
+              <Field label={t("Title")}>
                 <Input
                   value={requirement.title}
                   onChange={(event) =>
@@ -849,7 +852,7 @@ function SectionBody({
                   }
                 />
               </Field>
-              <Field label="Description">
+              <Field label={t("Description")}>
                 <Textarea
                   rows={3}
                   value={requirement.description}
@@ -865,7 +868,7 @@ function SectionBody({
               </Field>
               <div className="grid gap-3 md:grid-cols-2">
                 <ListEditor
-                  label="Acceptance criteria"
+                  label={t("Acceptance criteria")}
                   items={requirement.acceptanceCriteria}
                   onChange={(items) =>
                     mutate((current) => ({
@@ -878,7 +881,7 @@ function SectionBody({
                   compact
                 />
                 <ListEditor
-                  label="Edge cases"
+                  label={t("Edge cases")}
                   items={requirement.edgeCases}
                   onChange={(items) =>
                     mutate((current) => ({
@@ -899,8 +902,8 @@ function SectionBody({
     case "nfr":
       return (
         <SectionShell
-          title="Non-functional requirements"
-          description="Security, performance, reliability, accessibility, privacy, and operations with measurable targets."
+          title={t("Non-functional requirements")}
+          description={t("Security, performance, reliability, accessibility, privacy, and operations with measurable targets.")}
           action={
             <Button
               variant="secondary"
@@ -925,7 +928,7 @@ function SectionBody({
                 }))
               }
             >
-              <Plus className="h-3.5 w-3.5" /> NFR
+              <Plus className="h-3.5 w-3.5" /> {t("NFR")}
             </Button>
           }
         >
@@ -970,7 +973,7 @@ function SectionBody({
                 </div>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                <Field label="Title">
+                <Field label={t("Title")}>
                   <Input
                     value={nfr.title}
                     onChange={(event) =>
@@ -983,7 +986,7 @@ function SectionBody({
                     }
                   />
                 </Field>
-                <Field label="Priority">
+                <Field label={t("Priority")}>
                   <Select
                     value={nfr.priority}
                     onChange={(event) =>
@@ -997,13 +1000,13 @@ function SectionBody({
                       }))
                     }
                   >
-                    <option value="must">Must</option>
-                    <option value="should">Should</option>
-                    <option value="could">Could</option>
+                    <option value="must">{t("Must")}</option>
+                    <option value="should">{t("Should")}</option>
+                    <option value="could">{t("Could")}</option>
                   </Select>
                 </Field>
               </div>
-              <Field label="Requirement">
+              <Field label={t("Requirement")}>
                 <Textarea
                   rows={3}
                   value={nfr.requirement}
@@ -1017,7 +1020,7 @@ function SectionBody({
                   }
                 />
               </Field>
-              <Field label="Measurable target">
+              <Field label={t("Measurable target")}>
                 <Input
                   value={nfr.target}
                   onChange={(event) =>
@@ -1037,15 +1040,15 @@ function SectionBody({
 
     case "ux":
       return (
-        <SectionShell title="UX requirements" description="Principles, required states, accessibility, and the flows a builder must preserve.">
+        <SectionShell title={t("UX requirements")} description={t("Principles, required states, accessibility, and the flows a builder must preserve.")}>
           <div className="grid gap-4 md:grid-cols-3">
-            <ListEditor label="Principles" items={content.ux.principles} onChange={(items) => mutate((current) => ({ ...current, ux: { ...current.ux, principles: items } }))} compact />
-            <ListEditor label="Required states" items={content.ux.states} onChange={(items) => mutate((current) => ({ ...current, ux: { ...current.ux, states: items } }))} compact />
-            <ListEditor label="Accessibility" items={content.ux.accessibility} onChange={(items) => mutate((current) => ({ ...current, ux: { ...current.ux, accessibility: items } }))} compact />
+            <ListEditor label={t("Principles")} items={content.ux.principles} onChange={(items) => mutate((current) => ({ ...current, ux: { ...current.ux, principles: items } }))} compact />
+            <ListEditor label={t("Required states")} items={content.ux.states} onChange={(items) => mutate((current) => ({ ...current, ux: { ...current.ux, states: items } }))} compact />
+            <ListEditor label={t("Accessibility")} items={content.ux.accessibility} onChange={(items) => mutate((current) => ({ ...current, ux: { ...current.ux, accessibility: items } }))} compact />
           </div>
           {content.ux.flows.map((uxFlow, flowIndex) => (
             <Card key={`ux-flow-${flowIndex}`} className="space-y-3 p-4">
-              <Field label="UX flow name">
+              <Field label={t("UX flow name")}>
                 <Input
                   value={uxFlow.name}
                   onChange={(event) =>
@@ -1062,7 +1065,7 @@ function SectionBody({
                 />
               </Field>
               <ListEditor
-                label="Steps"
+                label={t("Steps")}
                 items={uxFlow.steps}
                 onChange={(items) =>
                   mutate((current) => ({
@@ -1084,15 +1087,15 @@ function SectionBody({
 
     case "technical":
       return (
-        <SectionShell title="Technical blueprint" description="Stack, entities, API contracts, security controls, and deployment expectations.">
-          <Field label="Overview">
+        <SectionShell title={t("Technical blueprint")} description={t("Stack, entities, API contracts, security controls, and deployment expectations.")}>
+          <Field label={t("Overview")}>
             <Textarea
               rows={4}
               value={content.technical.overview}
               onChange={(event) => mutate((current) => ({ ...current, technical: { ...current.technical, overview: event.target.value } }))}
             />
           </Field>
-          <Field label="Deployment">
+          <Field label={t("Deployment")}>
             <Textarea
               rows={3}
               value={content.technical.deployment}
@@ -1100,30 +1103,30 @@ function SectionBody({
             />
           </Field>
           <div className="grid gap-4 md:grid-cols-2">
-            <ListEditor label="Integrations" items={content.technical.integrations} onChange={(items) => mutate((current) => ({ ...current, technical: { ...current.technical, integrations: items } }))} />
-            <ListEditor label="Security controls" items={content.technical.security} onChange={(items) => mutate((current) => ({ ...current, technical: { ...current.technical, security: items } }))} />
+            <ListEditor label={t("Integrations")} items={content.technical.integrations} onChange={(items) => mutate((current) => ({ ...current, technical: { ...current.technical, integrations: items } }))} />
+            <ListEditor label={t("Security controls")} items={content.technical.security} onChange={(items) => mutate((current) => ({ ...current, technical: { ...current.technical, security: items } }))} />
           </div>
 
           <Subsection
-            title={`Stack (${content.technical.stack.length})`}
+            title={`${t("Stack")} (${content.technical.stack.length})`}
             action={
               <Button variant="ghost" size="sm" onClick={() => mutate((current) => ({ ...current, technical: { ...current.technical, stack: [...current.technical.stack, { layer: "", choice: "", rationale: "" }] } }))}>
-                <Plus className="h-3.5 w-3.5" /> Add
+                <Plus className="h-3.5 w-3.5" /> {t("Add")}
               </Button>
             }
           >
             {content.technical.stack.map((item, index) => (
               <div key={`stack-${index}`} className="grid gap-2 rounded-xl border border-border bg-background/30 p-3 md:grid-cols-[0.7fr_1fr_1.3fr_auto]">
-                <Input placeholder="Layer" value={item.layer} onChange={(event) => mutate((current) => ({ ...current, technical: { ...current.technical, stack: current.technical.stack.map((entry, entryIndex) => entryIndex === index ? { ...entry, layer: event.target.value } : entry) } }))} />
-                <Input placeholder="Choice" value={item.choice} onChange={(event) => mutate((current) => ({ ...current, technical: { ...current.technical, stack: current.technical.stack.map((entry, entryIndex) => entryIndex === index ? { ...entry, choice: event.target.value } : entry) } }))} />
-                <Input placeholder="Rationale" value={item.rationale} onChange={(event) => mutate((current) => ({ ...current, technical: { ...current.technical, stack: current.technical.stack.map((entry, entryIndex) => entryIndex === index ? { ...entry, rationale: event.target.value } : entry) } }))} />
+                <Input placeholder={t("Layer")} value={item.layer} onChange={(event) => mutate((current) => ({ ...current, technical: { ...current.technical, stack: current.technical.stack.map((entry, entryIndex) => entryIndex === index ? { ...entry, layer: event.target.value } : entry) } }))} />
+                <Input placeholder={t("Choice")} value={item.choice} onChange={(event) => mutate((current) => ({ ...current, technical: { ...current.technical, stack: current.technical.stack.map((entry, entryIndex) => entryIndex === index ? { ...entry, choice: event.target.value } : entry) } }))} />
+                <Input placeholder={t("Rationale")} value={item.rationale} onChange={(event) => mutate((current) => ({ ...current, technical: { ...current.technical, stack: current.technical.stack.map((entry, entryIndex) => entryIndex === index ? { ...entry, rationale: event.target.value } : entry) } }))} />
                 <Button variant="ghost" size="icon-sm" onClick={() => mutate((current) => ({ ...current, technical: { ...current.technical, stack: current.technical.stack.filter((_, entryIndex) => entryIndex !== index) } }))} aria-label="Remove stack item"><Trash2 className="h-3.5 w-3.5" /></Button>
               </div>
             ))}
           </Subsection>
 
           <Subsection
-            title={`Data model (${content.technical.dataModel.length})`}
+            title={`${t("Data model")} (${content.technical.dataModel.length})`}
             action={
               <Button variant="ghost" size="sm" onClick={() => mutate((current) => ({ ...current, technical: { ...current.technical, dataModel: [...current.technical.dataModel, { name: "", description: "", fields: [], relationships: [] }] } }))}>
                 <Plus className="h-3.5 w-3.5" /> Entity
@@ -1141,7 +1144,7 @@ function SectionBody({
           </Subsection>
 
           <Subsection
-            title={`API endpoints (${content.technical.apiEndpoints.length})`}
+            title={`${t("API endpoints")} (${content.technical.apiEndpoints.length})`}
             action={
               <Button variant="ghost" size="sm" onClick={() => mutate((current) => ({ ...current, technical: { ...current.technical, apiEndpoints: [...current.technical.apiEndpoints, { method: "GET", path: "", purpose: "", auth: "", request: "", response: "" }] } }))}>
                 <Plus className="h-3.5 w-3.5" /> Endpoint
@@ -1163,11 +1166,11 @@ function SectionBody({
     case "risks":
       return (
         <SectionShell
-          title="Risks"
-          description="Likelihood, impact, mitigation, and an accountable owner."
+          title={t("Risks")}
+          description={t("Likelihood, impact, mitigation, and an accountable owner.")}
           action={
             <Button variant="secondary" size="sm" onClick={() => mutate((current) => ({ ...current, risks: [...current.risks, { id: nextNumericId("RISK", current.risks.map((item) => item.id)), title: "", likelihood: "medium", impact: "medium", mitigation: "", owner: "" } satisfies Risk] }))}>
-              <Plus className="h-3.5 w-3.5" /> Risk
+              <Plus className="h-3.5 w-3.5" /> {t("Risk")}
             </Button>
           }
         >
@@ -1177,25 +1180,25 @@ function SectionBody({
                 <span className="font-mono text-[10px] text-accent">{risk.id}</span>
                 <Button variant="ghost" size="icon-sm" onClick={() => mutate((current) => ({ ...current, risks: current.risks.filter((item) => item.id !== risk.id) }))} aria-label="Remove risk"><Trash2 className="h-3.5 w-3.5" /></Button>
               </div>
-              <Field label="Risk">
+              <Field label={t("Risk")}>
                 <Input value={risk.title} onChange={(event) => mutate((current) => ({ ...current, risks: current.risks.map((item) => item.id === risk.id ? { ...item, title: event.target.value } : item) }))} />
               </Field>
               <div className="grid gap-3 md:grid-cols-3">
-                <Field label="Likelihood">
+                <Field label={t("Likelihood")}>
                   <Select value={risk.likelihood} onChange={(event) => mutate((current) => ({ ...current, risks: current.risks.map((item) => item.id === risk.id ? { ...item, likelihood: event.target.value as Risk["likelihood"] } : item) }))}>
-                    <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+                    <option value="low">{t("Low")}</option><option value="medium">{t("Medium")}</option><option value="high">{t("High")}</option>
                   </Select>
                 </Field>
-                <Field label="Impact">
+                <Field label={t("Impact")}>
                   <Select value={risk.impact} onChange={(event) => mutate((current) => ({ ...current, risks: current.risks.map((item) => item.id === risk.id ? { ...item, impact: event.target.value as Risk["impact"] } : item) }))}>
-                    <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+                    <option value="low">{t("Low")}</option><option value="medium">{t("Medium")}</option><option value="high">{t("High")}</option>
                   </Select>
                 </Field>
-                <Field label="Owner">
+                <Field label={t("Owner")}>
                   <Input value={risk.owner} onChange={(event) => mutate((current) => ({ ...current, risks: current.risks.map((item) => item.id === risk.id ? { ...item, owner: event.target.value } : item) }))} />
                 </Field>
               </div>
-              <Field label="Mitigation">
+              <Field label={t("Mitigation")}>
                 <Textarea rows={2} value={risk.mitigation} onChange={(event) => mutate((current) => ({ ...current, risks: current.risks.map((item) => item.id === risk.id ? { ...item, mitigation: event.target.value } : item) }))} />
               </Field>
             </Card>
@@ -1206,11 +1209,11 @@ function SectionBody({
     case "questions":
       return (
         <SectionShell
-          title="Open questions"
-          description="Unknowns stay visible. A blocking question prevents export until it is resolved or explicitly downgraded."
+          title={t("Open questions")}
+          description={t("Unknowns stay visible. A blocking question prevents export until it is resolved or explicitly downgraded.")}
           action={
             <Button variant="secondary" size="sm" onClick={() => mutate((current) => ({ ...current, openQuestions: [...current.openQuestions, { id: nextNumericId("OQ", current.openQuestions.map((item) => item.id)), question: "", owner: "", blocking: false, resolution: "" }] }))}>
-              <Plus className="h-3.5 w-3.5" /> Question
+              <Plus className="h-3.5 w-3.5" /> {t("Question")}
             </Button>
           }
         >
@@ -1219,22 +1222,22 @@ function SectionBody({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-[10px] text-accent">{question.id}</span>
-                  {question.blocking ? <Badge variant="danger">Blocking</Badge> : <Badge variant="muted">Non-blocking</Badge>}
+                  {question.blocking ? <Badge variant="danger">{t("Blocking")}</Badge> : <Badge variant="muted">{t("Non-blocking")}</Badge>}
                 </div>
                 <Button variant="ghost" size="icon-sm" onClick={() => mutate((current) => ({ ...current, openQuestions: current.openQuestions.filter((item) => item.id !== question.id) }))} aria-label="Remove question"><Trash2 className="h-3.5 w-3.5" /></Button>
               </div>
-              <Field label="Question">
+              <Field label={t("Question")}>
                 <Textarea rows={2} value={question.question} onChange={(event) => mutate((current) => ({ ...current, openQuestions: current.openQuestions.map((item) => item.id === question.id ? { ...item, question: event.target.value } : item) }))} />
               </Field>
               <div className="grid gap-3 md:grid-cols-2">
-                <Field label="Owner">
+                <Field label={t("Owner")}>
                   <Input value={question.owner} onChange={(event) => mutate((current) => ({ ...current, openQuestions: current.openQuestions.map((item) => item.id === question.id ? { ...item, owner: event.target.value } : item) }))} />
                 </Field>
-                <Field label="Resolution">
+                <Field label={t("Resolution")}>
                   <Input value={question.resolution} onChange={(event) => mutate((current) => ({ ...current, openQuestions: current.openQuestions.map((item) => item.id === question.id ? { ...item, resolution: event.target.value } : item) }))} />
                 </Field>
               </div>
-              <Switch checked={question.blocking} onChange={(checked) => mutate((current) => ({ ...current, openQuestions: current.openQuestions.map((item) => item.id === question.id ? { ...item, blocking: checked } : item) }))} label="Blocking release" />
+              <Switch checked={question.blocking} onChange={(checked) => mutate((current) => ({ ...current, openQuestions: current.openQuestions.map((item) => item.id === question.id ? { ...item, blocking: checked } : item) }))} label={t("Blocking release")} />
             </Card>
           ))}
         </SectionShell>
@@ -1242,7 +1245,7 @@ function SectionBody({
 
     case "release":
       return (
-        <SectionShell title="Release plan" description="Milestones and task assignments. Task IDs are synchronized from the execution plan.">
+        <SectionShell title={t("Release plan")} description={t("Milestones and task assignments. Task IDs are synchronized from the execution plan.")}>
           {content.releasePlan.map((milestone) => (
             <Card key={milestone.id} className="space-y-3 p-4">
               <div className="flex items-center justify-between">
@@ -1250,10 +1253,10 @@ function SectionBody({
                 <Badge variant="outline">{milestone.taskIds.length} tasks</Badge>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                <Field label="Name">
+                <Field label={t("Name")}>
                   <Input value={milestone.name} onChange={(event) => mutate((current) => ({ ...current, releasePlan: current.releasePlan.map((item) => item.id === milestone.id ? { ...item, name: event.target.value } : item) }))} />
                 </Field>
-                <Field label="Outcome">
+                <Field label={t("Outcome")}>
                   <Input value={milestone.outcome} onChange={(event) => mutate((current) => ({ ...current, releasePlan: current.releasePlan.map((item) => item.id === milestone.id ? { ...item, outcome: event.target.value } : item) }))} />
                 </Field>
               </div>
@@ -1267,28 +1270,28 @@ function SectionBody({
 
     case "qa":
       return (
-        <SectionShell title="QA strategy" description="How the team will prove the product works, and what blocks release.">
-          <Field label="Strategy">
+        <SectionShell title={t("QA strategy")} description={t("How the team will prove the product works, and what blocks release.")}>
+          <Field label={t("Strategy")}>
             <Textarea rows={5} value={content.qa.strategy} onChange={(event) => mutate((current) => ({ ...current, qa: { ...current.qa, strategy: event.target.value } }))} />
           </Field>
           <div className="grid gap-4 md:grid-cols-2">
-            <ListEditor label="Test levels" items={content.qa.testLevels} onChange={(items) => mutate((current) => ({ ...current, qa: { ...current.qa, testLevels: items } }))} />
-            <ListEditor label="Exit criteria" items={content.qa.exitCriteria} onChange={(items) => mutate((current) => ({ ...current, qa: { ...current.qa, exitCriteria: items } }))} />
+            <ListEditor label={t("Test levels")} items={content.qa.testLevels} onChange={(items) => mutate((current) => ({ ...current, qa: { ...current.qa, testLevels: items } }))} />
+            <ListEditor label={t("Exit criteria")} items={content.qa.exitCriteria} onChange={(items) => mutate((current) => ({ ...current, qa: { ...current.qa, exitCriteria: items } }))} />
           </div>
         </SectionShell>
       );
 
     case "glossary":
       return (
-        <SectionShell title="Glossary" description="Shared language for humans and coding agents.">
+        <SectionShell title={t("Glossary")} description={t("Shared language for humans and coding agents.")}>
           {content.glossary.map((entry, index) => (
             <div key={`glossary-${index}`} className="grid gap-2 rounded-xl border border-border bg-background/30 p-3 md:grid-cols-[0.6fr_1.4fr_auto]">
-              <Input placeholder="Term" value={entry.term} onChange={(event) => mutate((current) => ({ ...current, glossary: current.glossary.map((item, itemIndex) => itemIndex === index ? { ...item, term: event.target.value } : item) }))} />
-              <Input placeholder="Definition" value={entry.definition} onChange={(event) => mutate((current) => ({ ...current, glossary: current.glossary.map((item, itemIndex) => itemIndex === index ? { ...item, definition: event.target.value } : item) }))} />
+              <Input placeholder={t("Term")} value={entry.term} onChange={(event) => mutate((current) => ({ ...current, glossary: current.glossary.map((item, itemIndex) => itemIndex === index ? { ...item, term: event.target.value } : item) }))} />
+              <Input placeholder={t("Definition")} value={entry.definition} onChange={(event) => mutate((current) => ({ ...current, glossary: current.glossary.map((item, itemIndex) => itemIndex === index ? { ...item, definition: event.target.value } : item) }))} />
               <Button variant="ghost" size="icon-sm" onClick={() => mutate((current) => ({ ...current, glossary: current.glossary.filter((_, itemIndex) => itemIndex !== index) }))} aria-label="Remove glossary entry"><Trash2 className="h-3.5 w-3.5" /></Button>
             </div>
           ))}
-          <Button variant="secondary" size="sm" onClick={() => mutate((current) => ({ ...current, glossary: [...current.glossary, { term: "", definition: "" }] }))}><Plus className="h-3.5 w-3.5" /> Add term</Button>
+          <Button variant="secondary" size="sm" onClick={() => mutate((current) => ({ ...current, glossary: [...current.glossary, { term: "", definition: "" }] }))}><Plus className="h-3.5 w-3.5" /> {t("Add term")}</Button>
         </SectionShell>
       );
 
@@ -1352,6 +1355,7 @@ function ListEditor({
   hint?: string;
   compact?: boolean;
 }) {
+  const { t } = usePreferences();
   const [text, setText] = useState(items.join("\n"));
   const currentItems = useRef(items);
 
@@ -1374,7 +1378,7 @@ function ListEditor({
           currentItems.current = next;
           onChange(next);
         }}
-        placeholder="One item per line"
+        placeholder={t("One item per line")}
       />
       {hint ? <p className="mt-1.5 text-[10px] leading-relaxed text-muted">{hint}</p> : null}
     </div>
@@ -1390,6 +1394,7 @@ function GoalList({
   items: PRDContent["goals"]["objectives"];
   onChange: (items: PRDContent["goals"]["objectives"]) => void;
 }) {
+  const { t } = usePreferences();
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
@@ -1399,13 +1404,13 @@ function GoalList({
       <div className="space-y-2">
         {items.map((goal, index) => (
           <div key={goal.id} className="grid gap-2 rounded-xl border border-border bg-background/30 p-3 md:grid-cols-[1.4fr_0.8fr_0.8fr_auto]">
-            <Input placeholder="Outcome statement" value={goal.statement} onChange={(event) => onChange(items.map((item, itemIndex) => itemIndex === index ? { ...item, statement: event.target.value } : item))} />
-            <Input placeholder="Metric" value={goal.metric} onChange={(event) => onChange(items.map((item, itemIndex) => itemIndex === index ? { ...item, metric: event.target.value } : item))} />
-            <Input placeholder="Target" value={goal.target} onChange={(event) => onChange(items.map((item, itemIndex) => itemIndex === index ? { ...item, target: event.target.value } : item))} />
+            <Input placeholder={t("Outcome statement")} value={goal.statement} onChange={(event) => onChange(items.map((item, itemIndex) => itemIndex === index ? { ...item, statement: event.target.value } : item))} />
+            <Input placeholder={t("Metric")} value={goal.metric} onChange={(event) => onChange(items.map((item, itemIndex) => itemIndex === index ? { ...item, metric: event.target.value } : item))} />
+            <Input placeholder={t("Target")} value={goal.target} onChange={(event) => onChange(items.map((item, itemIndex) => itemIndex === index ? { ...item, target: event.target.value } : item))} />
             <Button variant="ghost" size="icon-sm" onClick={() => onChange(items.filter((_, itemIndex) => itemIndex !== index))} aria-label="Remove goal"><Trash2 className="h-3.5 w-3.5" /></Button>
           </div>
         ))}
-        <Button variant="ghost" size="sm" onClick={() => onChange([...items, { id: `goal-${Date.now()}`, statement: "", metric: "", target: "" }])}><Plus className="h-3.5 w-3.5" /> Add {label.toLowerCase()}</Button>
+        <Button variant="ghost" size="sm" onClick={() => onChange([...items, { id: `goal-${Date.now()}`, statement: "", metric: "", target: "" }])}><Plus className="h-3.5 w-3.5" /> {t("Add")} {label}</Button>
       </div>
     </div>
   );
@@ -1418,10 +1423,11 @@ function StepEditor({
   steps: PRDContent["journeys"][number]["steps"];
   onChange: (steps: PRDContent["journeys"][number]["steps"]) => void;
 }) {
+  const { t } = usePreferences();
   const [text, setText] = useState(steps.map((step) => `${step.actor} | ${step.action} | ${step.outcome}`).join("\n"));
   return (
     <div>
-      <Label>Steps — one per line: actor | action | outcome</Label>
+      <Label>{t("Steps — one per line: actor | action | outcome")}</Label>
       <Textarea
         rows={Math.min(7, Math.max(3, text.split("\n").length + 1))}
         value={text}
@@ -1472,18 +1478,19 @@ function DataEntityEditor({
   onChange: (entity: DataEntity) => void;
   onRemove: () => void;
 }) {
+  const { t } = usePreferences();
   const [fieldsText, setFieldsText] = useState(
     entity.fields.map((field) => `${field.name} | ${field.type} | ${field.required ? "yes" : "no"} | ${field.notes}`).join("\n"),
   );
   return (
     <div className="space-y-3 rounded-xl border border-border bg-background/30 p-3">
       <div className="flex items-center gap-2">
-        <Input placeholder="Entity name" value={entity.name} onChange={(event) => onChange({ ...entity, name: event.target.value })} />
+        <Input placeholder={t("Entity name")} value={entity.name} onChange={(event) => onChange({ ...entity, name: event.target.value })} />
         <Button variant="ghost" size="icon-sm" onClick={onRemove} aria-label="Remove entity"><Trash2 className="h-3.5 w-3.5" /></Button>
       </div>
-      <Input placeholder="Description" value={entity.description} onChange={(event) => onChange({ ...entity, description: event.target.value })} />
+      <Input placeholder={t("Description")} value={entity.description} onChange={(event) => onChange({ ...entity, description: event.target.value })} />
       <div>
-        <Label>Fields — name | type | required | notes</Label>
+        <Label>{t("Fields — name | type | required | notes")}</Label>
         <Textarea
           rows={Math.min(8, Math.max(3, fieldsText.split("\n").length + 1))}
           value={fieldsText}
@@ -1503,7 +1510,7 @@ function DataEntityEditor({
           }}
         />
       </div>
-      <ListEditor label="Relationships" items={entity.relationships} onChange={(relationships) => onChange({ ...entity, relationships })} compact />
+      <ListEditor label={t("Relationships")} items={entity.relationships} onChange={(relationships) => onChange({ ...entity, relationships })} compact />
     </div>
   );
 }
@@ -1517,6 +1524,7 @@ function ApiEndpointEditor({
   onChange: (endpoint: ApiEndpoint) => void;
   onRemove: () => void;
 }) {
+  const { t } = usePreferences();
   return (
     <div className="space-y-2 rounded-xl border border-border bg-background/30 p-3">
       <div className="grid gap-2 md:grid-cols-[110px_1fr_auto]">
@@ -1526,11 +1534,11 @@ function ApiEndpointEditor({
         <Input placeholder="/api/v1/resource" value={endpoint.path} onChange={(event) => onChange({ ...endpoint, path: event.target.value })} />
         <Button variant="ghost" size="icon-sm" onClick={onRemove} aria-label="Remove endpoint"><Trash2 className="h-3.5 w-3.5" /></Button>
       </div>
-      <Input placeholder="Purpose" value={endpoint.purpose} onChange={(event) => onChange({ ...endpoint, purpose: event.target.value })} />
+      <Input placeholder={t("Purpose")} value={endpoint.purpose} onChange={(event) => onChange({ ...endpoint, purpose: event.target.value })} />
       <div className="grid gap-2 md:grid-cols-3">
-        <Input placeholder="Auth" value={endpoint.auth} onChange={(event) => onChange({ ...endpoint, auth: event.target.value })} />
-        <Input placeholder="Request" value={endpoint.request} onChange={(event) => onChange({ ...endpoint, request: event.target.value })} />
-        <Input placeholder="Response" value={endpoint.response} onChange={(event) => onChange({ ...endpoint, response: event.target.value })} />
+        <Input placeholder={t("Auth")} value={endpoint.auth} onChange={(event) => onChange({ ...endpoint, auth: event.target.value })} />
+        <Input placeholder={t("Request")} value={endpoint.request} onChange={(event) => onChange({ ...endpoint, request: event.target.value })} />
+        <Input placeholder={t("Response")} value={endpoint.response} onChange={(event) => onChange({ ...endpoint, response: event.target.value })} />
       </div>
     </div>
   );

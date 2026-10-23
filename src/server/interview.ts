@@ -2,6 +2,7 @@ import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/server/db";
 import { interviewMessages, interviewSessions } from "@/server/db/schema";
+import type { Language } from "@/lib/i18n";
 import type {
   Coverage,
   InterviewAnswer,
@@ -93,6 +94,7 @@ async function generateQuestions(
   coverage: Coverage,
   messages: MessageRow[],
   round: number,
+  language: Language = "en",
 ): Promise<InterviewQuestionPayload> {
   const started = Date.now();
   const ai = await resolveAIConfig();
@@ -101,7 +103,7 @@ async function generateQuestions(
       const { data, usage } = await generateStructured(
         ai.config,
         INTERVIEW_SYSTEM_PROMPT,
-        buildInterviewUserPrompt(project, coverage, buildTranscript(messages), round),
+        buildInterviewUserPrompt(project, coverage, buildTranscript(messages), round, language),
         aiQuestionOutputSchema,
         { temperature: 0.4 },
       );
@@ -189,7 +191,7 @@ async function persistAssistantQuestions(
     .where(eq(interviewSessions.id, session.id));
 }
 
-export async function getInterviewState(projectId: string): Promise<InterviewState> {
+export async function getInterviewState(projectId: string, language: Language = "en"): Promise<InterviewState> {
   const project = await getProject(projectId);
   if (!project) throw new Error("Project not found.");
   const session = await getSession(projectId);
@@ -210,6 +212,7 @@ export async function getInterviewState(projectId: string): Promise<InterviewSta
       session.coverage,
       messages,
       session.round,
+      language,
     );
     await persistAssistantQuestions(session, payload);
     messages = await getMessages(session.id);
@@ -250,6 +253,7 @@ function toState(session: SessionRow, messages: MessageRow[]): InterviewState {
 export async function submitInterviewAnswers(
   projectId: string,
   input: unknown,
+  language: Language = "en",
 ): Promise<InterviewState> {
   const parsed = interviewRespondSchema.parse(input);
   const project = await getProject(projectId);
@@ -292,6 +296,7 @@ export async function submitInterviewAnswers(
     coverage,
     allMessages,
     nextRound,
+    language,
   );
   await persistAssistantQuestions(updatedSession, payload);
 

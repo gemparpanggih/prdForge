@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { usePreferences } from "@/components/preferences-provider";
 
 export function ReviewRefresh() {
   const router = useRouter();
+  const { t } = usePreferences();
   const [refreshing, setRefreshing] = useState(false);
   return (
     <Button
@@ -19,12 +21,12 @@ export function ReviewRefresh() {
         router.refresh();
         setTimeout(() => {
           setRefreshing(false);
-          toast.success("Review refreshed.");
+          toast.success(t("Review refreshed."));
         }, 500);
       }}
     >
       <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
-      Re-run review
+      {t("Re-run review")}
     </Button>
   );
 }

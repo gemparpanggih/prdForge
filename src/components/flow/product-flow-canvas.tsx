@@ -14,6 +14,7 @@ import {
   type OnNodesChange,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { usePreferences } from "@/components/preferences-provider";
 import { FlowNodeCard } from "./flow-node-card";
 import type { FlowCanvasEdge, FlowCanvasNode } from "./flow-types";
 
@@ -59,6 +60,7 @@ function CanvasInner({
   onDirty: () => void;
 }) {
   const { fitView } = useReactFlow();
+  const { t } = usePreferences();
   return (
     <div className="relative h-full w-full">
       <ReactFlow
@@ -80,25 +82,25 @@ function CanvasInner({
         maxZoom={1.8}
         snapToGrid
         snapGrid={[10, 10]}
-        className="bg-[#0b0c0f]"
+        className="bg-[var(--flow-bg)]"
       >
-        <Background variant={BackgroundVariant.Dots} gap={18} size={1} color="#22252b" />
+        <Background variant={BackgroundVariant.Dots} gap={18} size={1} color="var(--flow-grid)" />
         <Controls position="bottom-left" showInteractive={false} />
         <MiniMap
           position="bottom-right"
           pannable
           zoomable
-          maskColor="rgba(5,6,8,0.75)"
-          style={{ backgroundColor: "#0b0c0f", bottom: 24 }}
+          maskColor="var(--flow-mask)"
+          style={{ backgroundColor: "var(--flow-bg)", bottom: 24 }}
           nodeColor={(node) => {
             const kind = (node.data as FlowCanvasNode["data"])?.node?.kind;
             return kind === "screen"
-              ? "#c6f26a"
+              ? "var(--accent)"
               : kind === "decision"
-                ? "#fbbf24"
+                ? "var(--warning)"
                 : kind === "data"
-                  ? "#5eead4"
-                  : "#4b515c";
+                  ? "var(--success)"
+                  : "var(--flow-edge)";
           }}
         />
       </ReactFlow>
@@ -107,7 +109,7 @@ function CanvasInner({
         onClick={() => fitView({ padding: 0.25, duration: 400 })}
         className="absolute left-3 top-3 z-10 rounded-lg border border-border bg-surface/90 px-2.5 py-1.5 text-[10px] text-muted-strong backdrop-blur transition-colors hover:text-foreground"
       >
-        Fit view
+        {t("Fit view")}
       </button>
     </div>
   );

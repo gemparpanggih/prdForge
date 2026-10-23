@@ -12,7 +12,7 @@ export function Progress({
   const clamped = Math.max(0, Math.min(100, value));
   return (
     <div
-      className={cn("h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]", className)}
+      className={cn("h-1.5 w-full overflow-hidden rounded-full bg-foreground/[0.06]", className)}
       role="progressbar"
       aria-valuenow={clamped}
       aria-valuemin={0}
@@ -46,7 +46,7 @@ export function ScoreRing({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.06)"
+          stroke="var(--ring-track)"
           strokeWidth={6}
         />
         <circle

@@ -8,22 +8,27 @@ import {
   Database,
   HardDrive,
   KeyRound,
+  Languages,
   Loader2,
   Lock,
+  Moon,
   Save,
   ShieldCheck,
   Sparkles,
+  Sun,
   Trash2,
   Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { AppSettingsView, CredentialView, ProviderId } from "@/lib/types";
+import { LANGUAGES } from "@/lib/i18n";
 import { PROVIDERS, PROVIDER_MAP } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Label, Select } from "@/components/ui/input";
 import { cn, formatRelative } from "@/lib/utils";
+import { usePreferences } from "@/components/preferences-provider";
 
 function formFor(providerId: ProviderId, credentials: CredentialView[]) {
   const provider = PROVIDER_MAP[providerId];
@@ -43,6 +48,7 @@ export function SettingsForm({
   dataDir: string;
 }) {
   const router = useRouter();
+  const { language, theme, setLanguage, setTheme, t } = usePreferences();
   const [credentials, setCredentials] = useState(initial.credentials);
   const [selected, setSelected] = useState<ProviderId>(initial.defaultProvider);
   const [form, setForm] = useState(() => formFor(initial.defaultProvider, initial.credentials));
@@ -82,7 +88,7 @@ export function SettingsForm({
         }),
       });
       const payload = (await response.json()) as CredentialView & { error?: string };
-      if (!response.ok) throw new Error(payload.error || "Could not save the provider.");
+      if (!response.ok) throw new Error(payload.error || t("Could not save the provider."));
       setCredentials((current) => {
         const exists = current.some((item) => item.provider === selected);
         return exists
@@ -90,10 +96,10 @@ export function SettingsForm({
           : [...current, payload];
       });
       setForm((current) => ({ ...current, apiKey: "" }));
-      toast.success(`${provider.name} configuration saved.`);
+      toast.success(t("{name} configuration saved.", { name: t(provider.name) }));
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not save the provider.");
+      toast.error(error instanceof Error ? error.message : t("Could not save the provider."));
     } finally {
       setSaving(false);
     }
@@ -113,7 +119,7 @@ export function SettingsForm({
         latencyMs?: number;
         error?: string;
       };
-      if (!response.ok) throw new Error(payload.error || "Connection test failed.");
+      if (!response.ok) throw new Error(payload.error || t("Connection test failed."));
       toast.success(`Connected in ${payload.latencyMs} ms. Reply: ${payload.message}`);
       setCredentials((current) =>
         current.map((item) =>
@@ -123,28 +129,28 @@ export function SettingsForm({
         ),
       );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Connection test failed.");
+      toast.error(error instanceof Error ? error.message : t("Connection test failed."));
     } finally {
       setTesting(false);
     }
   }
 
   async function removeCredential() {
-    if (!window.confirm(`Remove the ${provider.name} configuration?`)) return;
+    if (!window.confirm(t("Remove the {name} configuration?", { name: t(provider.name) }))) return;
     try {
       const response = await fetch(`/api/settings/credentials?provider=${selected}`, {
         method: "DELETE",
       });
       if (!response.ok) {
         const payload = (await response.json()) as { error?: string };
-        throw new Error(payload.error || "Could not remove the provider.");
+        throw new Error(payload.error || t("Could not remove the provider."));
       }
       setCredentials((current) => current.filter((item) => item.provider !== selected));
       setForm(formFor(selected, []));
-      toast.success("Provider configuration removed.");
+      toast.success(t("Provider configuration removed."));
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not remove the provider.");
+      toast.error(error instanceof Error ? error.message : t("Could not remove the provider."));
     }
   }
 
@@ -157,12 +163,12 @@ export function SettingsForm({
         body: JSON.stringify({ defaultProvider, defaultModel, budgetUsd: Number(budgetUsd) }),
       });
       const payload = (await response.json()) as AppSettingsView & { error?: string };
-      if (!response.ok) throw new Error(payload.error || "Could not save settings.");
+      if (!response.ok) throw new Error(payload.error || t("Could not save settings."));
       setUsage(payload.usage);
-      toast.success("Generation settings saved.");
+      toast.success(t("Generation settings saved."));
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not save settings.");
+      toast.error(error instanceof Error ? error.message : t("Could not save settings."));
     } finally {
       setSavingDefaults(false);
     }
@@ -173,12 +179,11 @@ export function SettingsForm({
       <div>
         <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/[0.06] px-3 py-1 text-[10px] font-medium text-accent">
           <ShieldCheck className="h-3 w-3" />
-          Local-only workspace
+          {t("Local-only workspace")}
         </div>
-        <h1 className="mt-2 text-2xl font-semibold tracking-[-0.035em]">Settings</h1>
+        <h1 className="mt-2 text-2xl font-semibold tracking-[-0.035em]">{t("Settings")}</h1>
         <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted">
-          Bring your own model provider. Keys are encrypted at rest and never returned to the
-          browser. Without a provider, PRD Forge uses its deterministic local engine.
+          {t("Bring your own model provider. Keys are encrypted at rest and never returned to the browser. Without a provider, PRD Forge uses its deterministic local engine.")}
         </p>
       </div>
 
@@ -204,10 +209,10 @@ export function SettingsForm({
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1.5 text-[11px] font-medium text-foreground">
-                    {item.name}
+                    {t(item.name)}
                     {isConfigured ? <span className="h-1.5 w-1.5 rounded-full bg-accent" /> : null}
                   </span>
-                  <span className="mt-0.5 block text-[10px] leading-relaxed text-muted">{item.description}</span>
+                  <span className="mt-0.5 block text-[10px] leading-relaxed text-muted">{t(item.description)}</span>
                 </span>
               </button>
             );
@@ -216,17 +221,57 @@ export function SettingsForm({
           <Card className="p-3.5">
             <div className="flex items-center gap-2 text-[11px] font-medium">
               {configured.length ? <CheckCircle2 className="h-3.5 w-3.5 text-accent" /> : <AlertTriangle className="h-3.5 w-3.5 text-warning" />}
-              {configured.length ? `${configured.length} provider${configured.length > 1 ? "s" : ""} configured` : "Local engine mode"}
+              {configured.length ? t("{count} provider(s) configured", { count: configured.length }) : t("Local engine mode")}
             </div>
             <p className="mt-1 text-[10px] leading-relaxed text-muted">
               {configured.length
-                ? "AI synthesis is enabled. Failed AI stages fall back to the local engine and record a warning."
-                : "Add an API key to enable tailored interview questions and AI synthesis."}
+                ? t("AI synthesis is enabled. Failed AI stages fall back to the local engine and record a warning.")
+                : t("Add an API key to enable tailored interview questions and AI synthesis.")}
             </p>
           </Card>
         </div>
 
         <div className="space-y-4">
+          <Card className="p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Sun className="h-4 w-4 text-accent" />
+                {t("Appearance & language")}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1 rounded-xl border border-border bg-background/40 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setTheme("dark")}
+                    className={`flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-[10px] transition-colors ${theme === "dark" ? "bg-surface-raised text-foreground" : "text-muted hover:text-foreground"}`}
+                  >
+                    <Moon className="h-3 w-3" /> {t("Dark")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTheme("light")}
+                    className={`flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-[10px] transition-colors ${theme === "light" ? "bg-surface-raised text-foreground" : "text-muted hover:text-foreground"}`}
+                  >
+                    <Sun className="h-3 w-3" /> {t("Light")}
+                  </button>
+                </div>
+                <div className="flex items-center gap-1.5 rounded-xl border border-border bg-background/40 px-2">
+                  <Languages className="h-3.5 w-3.5 text-muted" />
+                  <select
+                    value={language}
+                    onChange={(event) => setLanguage(event.target.value as typeof language)}
+                    className="h-8 appearance-none bg-transparent text-[10px] text-muted-strong outline-none"
+                    aria-label={t("Language")}
+                  >
+                    {LANGUAGES.map((item) => (
+                      <option key={item.value} value={item.value}>{item.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </Card>
+
           <Card className="overflow-hidden">
             <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
               <div className="flex items-center gap-2.5">
@@ -234,23 +279,23 @@ export function SettingsForm({
                   <provider.icon className="h-4 w-4" />
                 </span>
                 <div>
-                  <div className="text-sm font-semibold">{provider.name}</div>
-                  <div className="text-[10px] text-muted">{provider.requiresKey ? "API key required" : "No API key required"}</div>
+                  <div className="text-sm font-semibold">{t(provider.name)}</div>
+                  <div className="text-[10px] text-muted">{provider.requiresKey ? t("API key required") : t("No API key required")}</div>
                 </div>
               </div>
               <div className="flex items-center gap-1.5">
                 {activeCredential && (activeCredential.hasKey || selected === "ollama") ? (
-                  <Badge variant="success">Configured</Badge>
+                  <Badge variant="success">{t("Configured")}</Badge>
                 ) : (
-                  <Badge variant="muted">Not configured</Badge>
+                  <Badge variant="muted">{t("Not configured")}</Badge>
                 )}
-                {activeCredential ? <Badge variant="outline">Model {activeCredential.model}</Badge> : null}
+                {activeCredential ? <Badge variant="outline">{t("Model")} {activeCredential.model}</Badge> : null}
               </div>
             </div>
             <div className="space-y-4 p-5">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label>API key</Label>
+                  <Label>{t("API key")}</Label>
                   <div className="relative">
                     <KeyRound className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted" />
                     <Input
@@ -260,10 +305,10 @@ export function SettingsForm({
                       onChange={(event) => setForm({ ...form, apiKey: event.target.value })}
                       placeholder={
                         activeCredential?.maskedKey
-                          ? `${activeCredential.maskedKey} — leave blank to keep`
+                          ? `${activeCredential.maskedKey} — ${t("leave blank to keep")}`
                           : provider.requiresKey
                             ? "sk-…"
-                            : "Not required"
+                            : t("Not required")
                       }
                       disabled={!provider.requiresKey}
                       autoComplete="off"
@@ -274,20 +319,20 @@ export function SettingsForm({
                   </p>
                 </div>
                 <div>
-                  <Label>Model</Label>
+                  <Label>{t("Model")}</Label>
                   <Input
                     value={form.model}
                     onChange={(event) => setForm({ ...form, model: event.target.value })}
-                    placeholder={provider.defaultModel || "model name"}
+                    placeholder={provider.defaultModel || t("model name")}
                   />
                   <p className="mt-1 text-[10px] text-muted">
-                    Use the exact model identifier accepted by the provider.
+                    {t("Use the exact model identifier accepted by the provider.")}
                   </p>
                 </div>
               </div>
 
               <div>
-                <Label>Base URL</Label>
+                <Label>{t("Base URL")}</Label>
                 <Input
                   value={form.baseUrl}
                   onChange={(event) => setForm({ ...form, baseUrl: event.target.value })}
@@ -295,33 +340,33 @@ export function SettingsForm({
                 />
                 <p className="mt-1 text-[10px] text-muted">
                   {selected === "ollama"
-                    ? "Point this at your local Ollama OpenAI-compatible endpoint."
-                    : "Must implement the provider's chat/messages API. Used only from the local server."}
+                    ? t("Point this at your local Ollama OpenAI-compatible endpoint.")
+                    : t("Must implement the provider's chat/messages API. Used only from the local server.")}
                 </p>
               </div>
 
               {activeCredential?.lastValidatedAt ? (
                 <div className="text-[10px] text-muted">
-                  Last successful test {formatRelative(activeCredential.lastValidatedAt)}.
+                  {t("Last successful test {time}.", { time: formatRelative(activeCredential.lastValidatedAt, language) })}
                 </div>
               ) : null}
 
               <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
                 <Button onClick={saveCredential} disabled={saving}>
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  Save provider
+                  {t("Save provider")}
                 </Button>
                 <Button variant="secondary" onClick={testConnection} disabled={testing || !activeCredential}>
                   {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
-                  Test connection
+                  {t("Test connection")}
                 </Button>
                 {activeCredential ? (
                   <Button variant="ghost" size="sm" onClick={removeCredential}>
                     <Trash2 className="h-3.5 w-3.5" />
-                    Remove
+                    {t("Remove")}
                   </Button>
                 ) : null}
-                <span className="text-[10px] text-muted">Save changes before testing.</span>
+                <span className="text-[10px] text-muted">{t("Save changes before testing.")}</span>
               </div>
             </div>
           </Card>
@@ -329,11 +374,11 @@ export function SettingsForm({
           <Card className="p-5">
             <div className="flex items-center gap-2 text-sm font-semibold">
               <Sparkles className="h-4 w-4 text-accent" />
-              Generation defaults
+              {t("Generation defaults")}
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-3">
               <div>
-                <Label>Default provider</Label>
+                <Label>{t("Default provider")}</Label>
                 <Select
                   value={defaultProvider}
                   onChange={(event) => {
@@ -344,29 +389,28 @@ export function SettingsForm({
                     setDefaultModel(credential?.model || providerConfig.defaultModel);
                   }}
                 >
-                  {PROVIDERS.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                  {PROVIDERS.map((item) => <option key={item.id} value={item.id}>{t(item.name)}</option>)}
                 </Select>
               </div>
               <div>
-                <Label>Default model</Label>
-                <Input value={defaultModel} onChange={(event) => setDefaultModel(event.target.value)} placeholder="Model identifier" />
+                <Label>{t("Default model")}</Label>
+                <Input value={defaultModel} onChange={(event) => setDefaultModel(event.target.value)} placeholder={t("Model identifier")} />
               </div>
               <div>
-                <Label>Estimated budget (USD)</Label>
+                <Label>{t("Estimated budget (USD)")}</Label>
                 <Input type="number" min={0} step={1} value={budgetUsd} onChange={(event) => setBudgetUsd(Number(event.target.value))} />
               </div>
             </div>
             <p className="mt-2 text-[10px] text-muted">
-              AI calls pause when estimated spend reaches this cap; 0 disables the guard. Provider
-              invoices remain the source of truth.
+              {t("AI calls pause when estimated spend reaches this cap; 0 disables the guard. Provider invoices remain the source of truth.")}
             </p>
             <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
               <div className="text-[10px] text-muted">
-                {usage.runs} runs · {usage.inputTokens.toLocaleString()} input · {usage.outputTokens.toLocaleString()} output tokens · ~${usage.costUsd.toFixed(3)} estimated
+                {t("{runs} runs · {input} input · {output} output tokens · ~${cost} estimated", { runs: usage.runs, input: usage.inputTokens.toLocaleString(), output: usage.outputTokens.toLocaleString(), cost: usage.costUsd.toFixed(3) })}
               </div>
               <Button variant="secondary" size="sm" onClick={saveDefaults} disabled={savingDefaults}>
                 {savingDefaults ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                Save defaults
+                {t("Save defaults")}
               </Button>
             </div>
           </Card>
@@ -374,27 +418,26 @@ export function SettingsForm({
           <Card className="p-5">
             <div className="flex items-center gap-2 text-sm font-semibold">
               <HardDrive className="h-4 w-4 text-info" />
-              Local data and security
+              {t("Local data and security")}
             </div>
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               <div className="rounded-xl border border-border bg-background/40 p-3">
                 <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-strong">
-                  <Database className="h-3 w-3 text-accent" /> Database
+                  <Database className="h-3 w-3 text-accent" /> {t("Database")}
                 </div>
                 <div className="mt-1 break-all font-mono text-[10px] text-muted">{dataDir}/pglite</div>
-                <div className="mt-1 text-[9px] text-muted">Embedded PostgreSQL (PGlite). No external database service required.</div>
+                <div className="mt-1 text-[9px] text-muted">{t("Embedded PostgreSQL (PGlite). No external database service required.")}</div>
               </div>
               <div className="rounded-xl border border-border bg-background/40 p-3">
                 <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-strong">
-                  <Lock className="h-3 w-3 text-accent" /> Encryption key
+                  <Lock className="h-3 w-3 text-accent" /> {t("Encryption key")}
                 </div>
                 <div className="mt-1 break-all font-mono text-[10px] text-muted">{dataDir}/master.key</div>
-                <div className="mt-1 text-[9px] text-muted">Generated locally with mode 0600. Back it up with the database or keys become unreadable.</div>
+                <div className="mt-1 text-[9px] text-muted">{t("Generated locally with mode 0600. Back it up with the database or keys become unreadable.")}</div>
               </div>
             </div>
             <p className="mt-3 text-[10px] leading-relaxed text-muted">
-              There is no account system and no outbound telemetry. The server binds to localhost by
-              default. AI requests go only to the provider you configure.
+              {t("There is no account system and no outbound telemetry. The server binds to localhost by default. AI requests go only to the provider you configure.")}
             </p>
           </Card>
         </div>

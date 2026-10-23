@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from "sonner";
 import { AppShell } from "@/components/app-shell";
+import { PreferencesProvider } from "@/components/preferences-provider";
+import { ThemeToaster } from "@/components/theme-toaster";
+import { getServerPreferences } from "@/lib/i18n-server";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,27 +22,20 @@ export const metadata: Metadata = {
     "Turn a rough product idea into a rigorous PRD, editable product flow, wireframes, and an AI-ready task plan.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const { language, theme } = await getServerPreferences();
   return (
     <html
-      lang="en"
+      lang={language}
+      data-theme={theme}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full">
-        <AppShell>{children}</AppShell>
-        <Toaster
-          theme="dark"
-          position="bottom-right"
-          richColors
-          closeButton
-          toastOptions={{
-            style: {
-              background: "#16181d",
-              border: "1px solid #262a31",
-              color: "#f4f4f5",
-            },
-          }}
-        />
+        <PreferencesProvider initialLanguage={language} initialTheme={theme}>
+          <AppShell>{children}</AppShell>
+          <ThemeToaster />
+        </PreferencesProvider>
       </body>
     </html>
   );

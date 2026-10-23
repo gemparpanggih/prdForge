@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/card";
 import { buttonClass } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProjectCard } from "@/components/dashboard/project-card";
+import { getServerPreferences } from "@/lib/i18n-server";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ export const metadata = {
 };
 
 export default async function DashboardPage() {
+  const { t } = await getServerPreferences();
   const projects = await listProjects();
   const ready = projects.filter((project) => project.readiness >= 80).length;
   const inProgress = projects.filter((project) =>
@@ -36,40 +38,39 @@ export default async function DashboardPage() {
         <div>
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/[0.06] px-3 py-1 text-[11px] font-medium text-accent">
             <Sparkles className="h-3 w-3" />
-            Local-first · AI-ready · English output
+            {t("Local-first · AI-ready · English output")}
           </div>
           <h1 className="max-w-2xl text-balance text-3xl font-semibold tracking-[-0.045em] text-foreground md:text-[2.65rem] md:leading-[1.05]">
-            Design the product before you build it.
+            {t("Design the product before you build it.")}
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">
-            Turn a rough idea into a professional PRD, an editable product flow, low-fidelity
-            wireframes, and a dependency-ordered task plan that an AI coding agent can execute.
+            {t("Turn a rough idea into a professional PRD, an editable product flow, low-fidelity wireframes, and a dependency-ordered task plan that an AI coding agent can execute.")}
           </p>
         </div>
         <Link href="/projects/new" className={buttonClass("primary", "md", "shrink-0")}>
           <Plus className="h-4 w-4" />
-          New project
+          {t("New project")}
         </Link>
       </div>
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Projects" value={projects.length} icon={FileText} detail="Total blueprints" />
-        <StatCard label="Ready" value={ready} icon={CircleCheck} detail="Readiness ≥ 80" tone="success" />
-        <StatCard label="In progress" value={inProgress} icon={Workflow} detail="Discovery or draft" tone="warning" />
-        <StatCard label="Average readiness" value={`${average}%`} icon={Sparkles} detail="Across all projects" tone="accent" />
+        <StatCard label={t("Projects")} value={projects.length} icon={FileText} detail={t("Total blueprints")} />
+        <StatCard label={t("Ready")} value={ready} icon={CircleCheck} detail={t("Readiness ≥ 80")} tone="success" />
+        <StatCard label={t("In progress")} value={inProgress} icon={Workflow} detail={t("Discovery or draft")} tone="warning" />
+        <StatCard label={t("Average readiness")} value={`${average}%`} icon={Sparkles} detail={t("Across all projects")} tone="accent" />
       </div>
 
       <div className="mt-9 flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-semibold tracking-tight text-foreground">Your projects</h2>
+          <h2 className="text-sm font-semibold tracking-tight text-foreground">{t("Your projects")}</h2>
           <p className="mt-0.5 text-xs text-muted">
             {projects.length === 0
-              ? "Start with a short brief. The interview handles the rest."
-              : "Pick up where you left off."}
+              ? t("Start with a short brief. The interview handles the rest.")
+              : t("Pick up where you left off.")}
           </p>
         </div>
         {projects.length > 0 ? (
-          <span className="text-[11px] text-muted">{projects.length} total</span>
+          <span className="text-[11px] text-muted">{projects.length} {t("total")}</span>
         ) : null}
       </div>
 
@@ -77,12 +78,12 @@ export default async function DashboardPage() {
         <EmptyState
           className="mt-4"
           icon={FileText}
-          title="No blueprints yet"
-          description="Create your first project. You will answer a few focused discovery questions, then PRD Forge builds the document, flow, wireframes, and task plan."
+          title={t("No blueprints yet")}
+          description={t("Create your first project. You will answer a few focused discovery questions, then PRD Forge builds the document, flow, wireframes, and task plan.")}
           action={
             <Link href="/projects/new" className={buttonClass("primary", "md")}>
               <Plus className="h-4 w-4" />
-              Create your first project
+              {t("Create your first project")}
             </Link>
           }
         />
@@ -97,9 +98,9 @@ export default async function DashboardPage() {
       <div className="mt-12">
         <div className="mb-4 flex items-end justify-between">
           <div>
-            <h2 className="text-sm font-semibold tracking-tight">How it works</h2>
+            <h2 className="text-sm font-semibold tracking-tight">{t("How it works")}</h2>
             <p className="mt-0.5 text-xs text-muted">
-              Four stages, one source of truth, zero hand-waving.
+              {t("Four stages, one source of truth, zero hand-waving.")}
             </p>
           </div>
         </div>
@@ -107,20 +108,20 @@ export default async function DashboardPage() {
           <StepCard
             number="01"
             icon={MessagesSquare}
-            title="Discovery interview"
-            description="The AI asks only the questions that matter, tracks coverage, and records assumptions explicitly."
+            title={t("Discovery interview")}
+            description={t("The AI asks only the questions that matter, tracks coverage, and records assumptions explicitly.")}
           />
           <StepCard
             number="02"
             icon={Workflow}
-            title="Blueprint workspace"
-            description="Edit the PRD, drag the product flow, and tune low-fidelity wireframes linked to requirements."
+            title={t("Blueprint workspace")}
+            description={t("Edit the PRD, drag the product flow, and tune low-fidelity wireframes linked to requirements.")}
           />
           <StepCard
             number="03"
             icon={FileText}
-            title="Execution bundle"
-            description="Export PRD.md, TASKS.md, AGENTS.md, diagrams, and JSON that a coding agent can follow."
+            title={t("Execution bundle")}
+            description={t("Export PRD.md, TASKS.md, AGENTS.md, diagrams, and JSON that a coding agent can follow.")}
           />
         </div>
       </div>
@@ -131,15 +132,14 @@ export default async function DashboardPage() {
             <Sparkles className="h-4 w-4" />
           </div>
           <div>
-            <div className="text-sm font-medium text-foreground">Bring your own model</div>
+            <div className="text-sm font-medium text-foreground">{t("Bring your own model")}</div>
             <p className="mt-0.5 max-w-xl text-xs leading-relaxed text-muted">
-              The deterministic local engine can generate a complete, valid blueprint without a
-              key. Add a provider in Settings when you want tailored synthesis.
+              {t("The deterministic local engine can generate a complete, valid blueprint without a key. Add a provider in Settings when you want tailored synthesis.")}
             </p>
           </div>
         </div>
         <Link href="/settings" className={buttonClass("outline", "sm")}>
-          Configure provider
+          {t("Configure provider")}
           <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>

@@ -6,14 +6,19 @@ import { useState } from "react";
 import {
   ArrowUpRight,
   FolderKanban,
+  Languages,
   Menu,
+  Moon,
   Plus,
   Settings,
   ShieldCheck,
   Sparkles,
+  Sun,
   X,
 } from "lucide-react";
+import { LANGUAGES } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { usePreferences } from "./preferences-provider";
 import { Button } from "./ui/button";
 
 const primaryNav = [
@@ -22,9 +27,10 @@ const primaryNav = [
 ];
 
 function Brand() {
+  const { t } = usePreferences();
   return (
     <Link href="/" className="group flex items-center gap-3">
-      <span className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-accent-foreground shadow-[0_0_24px_rgba(198,242,106,0.22)]">
+      <span className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-accent-foreground shadow-[0_0_24px_var(--accent-glow)]">
         <Sparkles className="h-4 w-4" />
       </span>
       <span>
@@ -32,7 +38,7 @@ function Brand() {
           PRD Forge
         </span>
         <span className="block text-[10px] uppercase tracking-[0.2em] text-muted">
-          Blueprint studio
+          {t("Blueprint studio")}
         </span>
       </span>
     </Link>
@@ -41,6 +47,7 @@ function Brand() {
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const { language, theme, setLanguage, toggleTheme, t } = usePreferences();
   return (
     <div className="flex h-full flex-col">
       <div className="px-5 pb-6 pt-5">
@@ -51,10 +58,10 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         <Link
           href="/projects/new"
           onClick={onNavigate}
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-accent text-xs font-semibold text-accent-foreground transition-colors hover:bg-[#d4f77f]"
+          className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-accent text-xs font-semibold text-accent-foreground transition-colors hover:bg-[var(--accent-hover)]"
         >
           <Plus className="h-3.5 w-3.5" />
-          New project
+          {t("New project")}
         </Link>
       </div>
 
@@ -70,33 +77,59 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               className={cn(
                 "group flex h-9 items-center gap-2.5 rounded-lg px-3 text-xs font-medium transition-colors",
                 active
-                  ? "bg-white/[0.06] text-foreground"
-                  : "text-muted hover:bg-white/[0.04] hover:text-foreground",
+                  ? "bg-foreground/[0.06] text-foreground"
+                  : "text-muted hover:bg-foreground/[0.04] hover:text-foreground",
               )}
             >
               <item.icon
                 className={cn("h-4 w-4", active ? "text-accent" : "text-muted group-hover:text-muted-strong")}
               />
-              {item.label}
+              {t(item.label)}
               {active ? <span className="ml-auto h-1 w-1 rounded-full bg-accent" /> : null}
             </Link>
           );
         })}
       </nav>
 
-      <div className="mt-auto p-3">
+      <div className="mt-auto space-y-2 p-3">
+        <div className="flex items-center gap-1.5 rounded-xl border border-border bg-surface-raised/60 p-1">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-foreground/[0.05] hover:text-foreground"
+            title={t("Toggle theme")}
+            aria-label={t("Toggle theme")}
+          >
+            {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+          </button>
+          <span className="h-4 w-px bg-border" />
+          <Languages className="ml-1 h-3.5 w-3.5 shrink-0 text-muted" />
+          <select
+            value={language}
+            onChange={(event) => setLanguage(event.target.value as typeof language)}
+            aria-label={t("Language")}
+            className="h-7 min-w-0 flex-1 appearance-none bg-transparent pl-1 text-[10px] text-muted-strong outline-none"
+          >
+            {LANGUAGES.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="rounded-xl border border-border bg-surface-raised/60 p-3.5">
           <div className="flex items-center gap-2 text-[11px] font-medium text-foreground">
             <ShieldCheck className="h-3.5 w-3.5 text-accent" />
-            Local workspace
+            {t("Local workspace")}
           </div>
           <p className="mt-1.5 text-[11px] leading-relaxed text-muted">
-            No account, no cloud sync. Projects and encrypted AI keys stay on this machine.
+            {t("No account, no cloud sync. Projects and encrypted AI keys stay on this machine.")}
           </p>
           <div className="mt-3 flex items-center justify-between text-[10px] text-muted">
-            <span>Embedded Postgres</span>
+            <span>{t("Embedded Postgres")}</span>
             <Link href="/settings" onClick={onNavigate} className="inline-flex items-center gap-0.5 text-accent hover:underline">
-              Manage <ArrowUpRight className="h-2.5 w-2.5" />
+              {t("Manage")} <ArrowUpRight className="h-2.5 w-2.5" />
             </Link>
           </div>
         </div>
@@ -106,6 +139,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const { t } = usePreferences();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -116,7 +150,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur lg:hidden">
         <Brand />
-        <Button variant="ghost" size="icon-sm" onClick={() => setMobileOpen(true)} aria-label="Open navigation">
+        <Button variant="ghost" size="icon-sm" onClick={() => setMobileOpen(true)} aria-label={t("Open navigation")}>
           <Menu className="h-4 w-4" />
         </Button>
       </div>
@@ -125,7 +159,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="fixed inset-0 z-40 lg:hidden">
           <button
             type="button"
-            aria-label="Close navigation"
+            aria-label={t("Close navigation")}
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
@@ -135,7 +169,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               size="icon-sm"
               className="absolute right-3 top-4"
               onClick={() => setMobileOpen(false)}
-              aria-label="Close navigation"
+              aria-label={t("Close navigation")}
             >
               <X className="h-4 w-4" />
             </Button>

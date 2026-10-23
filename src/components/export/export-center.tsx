@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Progress, ScoreRing } from "@/components/ui/progress";
+import { usePreferences } from "@/components/preferences-provider";
 import { cn, downloadBlob, formatDate, formatRelative } from "@/lib/utils";
 
 type FileEntry = { path: string; size: number };
@@ -47,6 +48,7 @@ export function ExportCenter({
   history: ExportHistory[];
 }) {
   const router = useRouter();
+  const { language, t } = usePreferences();
   const [downloading, setDownloading] = useState(false);
   const [overrideOpen, setOverrideOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState<{ path: string; content: string } | null>(null);
@@ -62,12 +64,12 @@ export function ExportCenter({
       if (response.status === 409) {
         const payload = (await response.json()) as { error?: string };
         setOverrideOpen(true);
-        toast.warning(payload.error || "Readiness issues must be resolved or explicitly overridden.");
+        toast.warning(payload.error || t("Readiness issues must be resolved or explicitly overridden."));
         return;
       }
       if (!response.ok) {
         const payload = (await response.json()) as { error?: string };
-        throw new Error(payload.error || "Export failed.");
+        throw new Error(payload.error || t("Export failed."));
       }
       const blob = await response.blob();
       const disposition = response.headers.get("Content-Disposition") ?? "";
@@ -75,10 +77,10 @@ export function ExportCenter({
       const filename = match?.[1] ?? `${project.slug}-prd-v${prdVersion}.zip`;
       downloadBlob(blob, filename);
       setOverrideOpen(false);
-      toast.success("Export bundle downloaded.");
+      toast.success(t("Export bundle downloaded."));
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Export failed.");
+      toast.error(error instanceof Error ? error.message : t("Export failed."));
     } finally {
       setDownloading(false);
     }
@@ -92,12 +94,12 @@ export function ExportCenter({
       );
       if (!response.ok) {
         const payload = (await response.json()) as { error?: string };
-        throw new Error(payload.error || "Could not load the file.");
+        throw new Error(payload.error || t("Could not load the file."));
       }
       const content = await response.text();
       setPreviewFile({ path, content });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not load the file.");
+      toast.error(error instanceof Error ? error.message : t("Could not load the file."));
     } finally {
       setPreviewLoading(null);
     }
@@ -107,9 +109,9 @@ export function ExportCenter({
     const prompt = `You are implementing "${project.name}". Read AGENTS.md first, then PRD.md, ARCHITECTURE.md, DATA_MODEL.md, API_SPEC.md, and TASKS.md. Execute the first unblocked task in TASKS.md. Follow its acceptance criteria and Definition of Done. Run the repository's documented checks. Do not add scope. Report changed files, commands run, results, and risks.`;
     try {
       await navigator.clipboard.writeText(prompt);
-      toast.success("AI execution prompt copied.");
+      toast.success(t("AI execution prompt copied."));
     } catch {
-      toast.error("Clipboard permission was denied.");
+      toast.error(t("Clipboard permission was denied."));
     }
   }
 
@@ -119,9 +121,9 @@ export function ExportCenter({
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/[0.06] px-3 py-1 text-[10px] font-medium text-accent">
             <FileArchive className="h-3 w-3" />
-            Execution bundle · PRD v{prdVersion}
+            {t("Execution bundle · PRD v{version}", { version: prdVersion })}
           </div>
-          <h1 className="mt-2 text-2xl font-semibold tracking-[-0.035em]">Export center</h1>
+          <h1 className="mt-2 text-2xl font-semibold tracking-[-0.035em]">{t("Export center")}</h1>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted">
             A validated Markdown bundle plus machine-readable JSON. The coding agent reads{" "}
             <span className="text-muted-strong">AGENTS.md</span>, then follows{" "}
@@ -131,11 +133,11 @@ export function ExportCenter({
         <div className="flex items-center gap-2">
           <Button variant="secondary" onClick={copyPrompt}>
             <ClipboardCopy className="h-4 w-4" />
-            Copy AI prompt
+            {t("Copy AI prompt")}
           </Button>
           <Button onClick={() => download(false)} disabled={downloading}>
             {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            Download bundle
+            {t("Download bundle")}
           </Button>
         </div>
       </div>
@@ -145,7 +147,7 @@ export function ExportCenter({
           <Card className="overflow-hidden">
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <div>
-                <div className="text-xs font-semibold">Bundle contents</div>
+                <div className="text-xs font-semibold">{t("Bundle contents")}</div>
                 <div className="mt-0.5 text-[10px] text-muted">{files.length} files · generated from the latest PRD version</div>
               </div>
               <Badge variant="outline">ZIP</Badge>
@@ -155,7 +157,7 @@ export function ExportCenter({
                 const extension = file.path.split(".").pop() ?? "";
                 const Icon = FILE_ICONS[extension] ?? FileText;
                 return (
-                  <div key={file.path} className="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-white/[0.02]">
+                  <div key={file.path} className="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-foreground/[0.02]">
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-background/50 text-muted-strong">
                       <Icon className="h-3.5 w-3.5" />
                     </span>
@@ -184,24 +186,24 @@ export function ExportCenter({
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs font-semibold">Export history</div>
-                <div className="mt-0.5 text-[10px] text-muted">Every download is recorded locally.</div>
+                <div className="text-xs font-semibold">{t("Export history")}</div>
+                <div className="mt-0.5 text-[10px] text-muted">{t("Every download is recorded locally.")}</div>
               </div>
               <Badge variant="outline">{history.length}</Badge>
             </div>
             {history.length === 0 ? (
-              <p className="mt-3 text-[11px] text-muted">No exports yet.</p>
+              <p className="mt-3 text-[11px] text-muted">{t("No exports yet.")}</p>
             ) : (
               <div className="mt-3 divide-y divide-border/60">
                 {history.slice(0, 8).map((entry) => (
                   <div key={entry.id} className="flex items-center justify-between py-2 text-[11px]">
                     <div>
                       <span className="font-mono text-accent">v{entry.prdVersion}</span>
-                      <span className="ml-2 text-muted">{formatDate(entry.createdAt)}</span>
+                      <span className="ml-2 text-muted">{formatDate(entry.createdAt, language)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-muted">
                       <span>{entry.files} files</span>
-                      <span>{formatRelative(entry.createdAt)}</span>
+                      <span>{formatRelative(entry.createdAt, language)}</span>
                     </div>
                   </div>
                 ))}
@@ -214,12 +216,12 @@ export function ExportCenter({
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted">Export gate</div>
+                <div className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted">{t("Export gate")}</div>
                 <div className="mt-0.5 text-xs text-muted">
-                  {readiness.canExport ? "All checks passed." : "Review issues remain."}
+                  {readiness.canExport ? t("All checks passed.") : t("Review issues remain.")}
                 </div>
               </div>
-              <ScoreRing score={readiness.score} size={70} label="Score" />
+              <ScoreRing score={readiness.score} size={70} label={t("Score")} />
             </div>
             <Progress value={readiness.score} className="mt-2" indicatorClassName={readiness.canExport ? "bg-accent" : "bg-warning"} />
             <div className="mt-3 space-y-1.5 text-[10px]">
@@ -232,40 +234,36 @@ export function ExportCenter({
             </div>
             {!readiness.canExport ? (
               <div className="mt-3 rounded-lg border border-warning/25 bg-warning/[0.05] p-2.5 text-[10px] leading-relaxed text-muted">
-                Export is blocked by {readiness.stats.openBlockers} blocker(s), {majorIssues} major
-                issue(s), and a score of {readiness.score}. You can override and include{" "}
-                <span className="text-muted-strong">OPEN_ISSUES.md</span>.
+                {t("Export is blocked by {blockers} blocker(s), {major} major issue(s), and a score of {score}. You can override and include OPEN_ISSUES.md.", { blockers: readiness.stats.openBlockers, major: majorIssues, score: readiness.score })}
               </div>
             ) : null}
             <Button className="mt-3 w-full" size="sm" onClick={() => download(false)} disabled={downloading}>
               {downloading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-              Download ZIP
+              {t("Download ZIP")}
             </Button>
           </Card>
 
           <Card className="p-4">
             <div className="flex items-center gap-2 text-xs font-semibold">
               <ShieldCheck className="h-3.5 w-3.5 text-accent" />
-              What the agent gets
+              {t("What the agent gets")}
             </div>
             <ul className="mt-2.5 space-y-1.5 text-[10px] leading-relaxed text-muted">
-              <li>• A single ordered task plan with dependencies</li>
-              <li>• Acceptance criteria and Definition of Done</li>
-              <li>• Architecture, data model, and API contracts</li>
-              <li>• Mermaid diagrams for flow and task graph</li>
-              <li>• Execution rules and scope guardrails</li>
+              <li>• {t("A single ordered task plan with dependencies")}</li>
+              <li>• {t("Acceptance criteria and Definition of Done")}</li>
+              <li>• {t("Architecture, data model, and API contracts")}</li>
+              <li>• {t("Mermaid diagrams for flow and task graph")}</li>
+              <li>• {t("Execution rules and scope guardrails")}</li>
             </ul>
           </Card>
 
           <Card className="p-4">
             <div className="flex items-center gap-2 text-xs font-semibold">
               <FileJson className="h-3.5 w-3.5 text-info" />
-              Machine-readable
+              {t("Machine-readable")}
             </div>
             <p className="mt-1.5 text-[10px] leading-relaxed text-muted">
-              Use <span className="font-mono text-muted-strong">TASKS.json</span> or{" "}
-              <span className="font-mono text-muted-strong">prd.json</span> to sync the plan into
-              your own tooling without parsing Markdown.
+              {t("Use TASKS.json or prd.json to sync the plan into your own tooling without parsing Markdown.")}
             </p>
           </Card>
         </div>
@@ -274,14 +272,14 @@ export function ExportCenter({
       <Dialog
         open={overrideOpen}
         onOpenChange={setOverrideOpen}
-        title="Export with open issues?"
-        description="The bundle will include OPEN_ISSUES.md so the implementation agent can see the unresolved findings."
+        title={t("Export with open issues?")}
+        description={t("The bundle will include OPEN_ISSUES.md so the implementation agent can see the unresolved findings.")}
         footer={
           <>
-            <Button variant="ghost" onClick={() => setOverrideOpen(false)}>Cancel</Button>
+            <Button variant="ghost" onClick={() => setOverrideOpen(false)}>{t("Cancel")}</Button>
             <Button variant="danger" onClick={() => download(true)} disabled={downloading}>
               {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              Download with issues
+              {t("Download with issues")}
             </Button>
           </>
         }
@@ -305,21 +303,21 @@ export function ExportCenter({
       <Dialog
         open={Boolean(previewFile)}
         onOpenChange={() => setPreviewFile(null)}
-        title={previewFile?.path ?? "File preview"}
-        description="Preview of the generated export file."
+        title={previewFile?.path ?? t("File preview")}
+        description={t("Preview of the generated export file.")}
         size="xl"
         footer={
           previewFile ? (
             <>
-              <Button variant="ghost" onClick={() => setPreviewFile(null)}>Close</Button>
+              <Button variant="ghost" onClick={() => setPreviewFile(null)}>{t("Close")}</Button>
               <Button
                 variant="secondary"
                 onClick={async () => {
                   await navigator.clipboard.writeText(previewFile.content);
-                  toast.success("File copied.");
+                  toast.success(t("File copied."));
                 }}
               >
-                <ClipboardCopy className="h-4 w-4" /> Copy
+                <ClipboardCopy className="h-4 w-4" /> {t("Copy")}
               </Button>
             </>
           ) : null

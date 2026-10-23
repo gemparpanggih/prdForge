@@ -70,6 +70,14 @@ Without a provider, the deterministic local engine produces a complete blueprint
 
 Provider keys are encrypted with AES-256-GCM before they are written to the database. The raw key is never returned to the browser. If `APP_ENCRYPTION_KEY` is not set, a 32-byte key is generated at `.data/master.key` with mode `0600`.
 
+### Theme and language
+
+Use the control at the bottom of the sidebar, or the **Appearance & language** card in Settings, to switch between the dark and light themes and between English and Bahasa Indonesia.
+
+The defaults are the dark theme and English. Preferences are stored in local cookies (`prd_theme` and `prd_language`) and applied during server rendering, so the selected theme and language survive reloads without a flash.
+
+The interface is bilingual. Generated PRD content, requirements, task prompts, and export files remain in English so they stay consistent for AI coding agents; the UI language does not change the generated document language.
+
 ### Local data
 
 ```text

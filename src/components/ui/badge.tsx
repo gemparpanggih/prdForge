@@ -1,4 +1,7 @@
+"use client";
+
 import * as React from "react";
+import { usePreferences } from "@/components/preferences-provider";
 import { cn } from "@/lib/utils";
 
 type Variant = "default" | "accent" | "success" | "warning" | "danger" | "muted" | "info" | "outline";
@@ -9,7 +12,7 @@ const variants: Record<Variant, string> = {
   success: "bg-success/10 text-success border-success/25",
   warning: "bg-warning/10 text-warning border-warning/25",
   danger: "bg-danger/10 text-danger border-danger/25",
-  muted: "bg-white/[0.03] text-muted border-border",
+  muted: "bg-foreground/[0.03] text-muted border-border",
   info: "bg-info/10 text-info border-info/25",
   outline: "bg-transparent text-muted-strong border-border-strong",
 };
@@ -32,12 +35,14 @@ export function Badge({
 }
 
 export function StatusBadge({ status }: { status: string }) {
+  const { t } = usePreferences();
   const map: Record<string, Variant> = {
     interview: "info",
     generating: "warning",
     draft: "default",
     review: "warning",
     ready: "success",
+    approved: "success",
     exported: "accent",
     todo: "muted",
     in_progress: "info",
@@ -56,7 +61,7 @@ export function StatusBadge({ status }: { status: string }) {
   };
   return (
     <Badge variant={map[status] ?? "default"} className="capitalize">
-      {status.replace(/_/g, " ")}
+      {t(status.replace(/_/g, " "))}
     </Badge>
   );
 }

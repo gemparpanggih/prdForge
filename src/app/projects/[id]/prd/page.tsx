@@ -10,6 +10,7 @@ import {
 import { PrdEditor } from "@/components/prd/prd-editor";
 import { EmptyState } from "@/components/ui/empty-state";
 import { buttonClass } from "@/components/ui/button";
+import { getServerPreferences } from "@/lib/i18n-server";
 
 export const metadata = {
   title: "PRD — PRD Forge",
@@ -21,6 +22,7 @@ export default async function PrdPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const { t } = await getServerPreferences();
   const [project, latest, flow, versions] = await Promise.all([
     getProject(id),
     getLatestPrd(id),
@@ -34,12 +36,12 @@ export default async function PrdPage({
       <div className="mx-auto w-full max-w-3xl px-5 py-12 md:px-8">
         <EmptyState
           icon={FileText}
-          title="No PRD yet"
-          description="Finish at least one discovery round, then generate the blueprint. The PRD, flow, wireframes, and tasks are created together."
+          title={t("No PRD yet")}
+          description={t("Finish at least one discovery round, then generate the blueprint. The PRD, flow, wireframes, and tasks are created together.")}
           action={
             <Link href={`/projects/${id}/interview`} className={buttonClass("primary", "md")}>
               <Sparkles className="h-4 w-4" />
-              Go to discovery
+              {t("Go to discovery")}
             </Link>
           }
         />

@@ -6,14 +6,14 @@ type Size = "sm" | "md" | "lg" | "icon" | "icon-sm";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-accent text-accent-foreground hover:bg-[#d4f77f] shadow-[0_0_0_1px_rgba(198,242,106,0.25),0_8px_24px_rgba(198,242,106,0.12)]",
+    "bg-accent text-accent-foreground hover:bg-[var(--accent-hover)] shadow-[0_0_0_1px_var(--accent-ring),0_8px_24px_var(--accent-glow)]",
   secondary:
     "bg-surface-raised text-foreground border border-border hover:bg-surface-hover",
   outline:
     "border border-border-strong bg-transparent text-foreground hover:bg-surface-raised",
   ghost: "bg-transparent text-muted-strong hover:bg-surface-raised hover:text-foreground",
   danger: "bg-danger/15 text-danger border border-danger/30 hover:bg-danger/25",
-  link: "bg-transparent text-accent hover:text-[#d4f77f] p-0 h-auto",
+  link: "bg-transparent text-accent hover:text-[var(--accent-hover)] p-0 h-auto",
 };
 
 const sizes: Record<Size, string> = {

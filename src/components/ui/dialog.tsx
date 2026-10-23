@@ -3,6 +3,7 @@
 import * as React from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePreferences } from "@/components/preferences-provider";
 import { Button } from "./button";
 
 export function Dialog({
@@ -23,6 +24,7 @@ export function Dialog({
   size?: "md" | "lg" | "xl";
 }) {
   const titleId = React.useId();
+  const { t } = usePreferences();
 
   React.useEffect(() => {
     if (!open) return;
@@ -44,7 +46,7 @@ export function Dialog({
     <div className="fixed inset-0 z-50 flex items-end justify-center p-3 sm:items-center sm:p-6">
       <button
         type="button"
-        aria-label="Close dialog"
+        aria-label={t("Close")}
         className="absolute inset-0 bg-black/70 backdrop-blur-sm animate-fade-in"
         onClick={() => onOpenChange(false)}
       />
@@ -72,7 +74,7 @@ export function Dialog({
             variant="ghost"
             size="icon-sm"
             onClick={() => onOpenChange(false)}
-            aria-label="Close"
+            aria-label={t("Close")}
           >
             <X className="h-4 w-4" />
           </Button>

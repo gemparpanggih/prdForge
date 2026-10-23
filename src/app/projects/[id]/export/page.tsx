@@ -11,6 +11,7 @@ import { buildExportFiles, listExports } from "@/server/export";
 import { ExportCenter } from "@/components/export/export-center";
 import { EmptyState } from "@/components/ui/empty-state";
 import { buttonClass } from "@/components/ui/button";
+import { getServerPreferences } from "@/lib/i18n-server";
 
 export const metadata = {
   title: "Export — PRD Forge",
@@ -22,6 +23,7 @@ export default async function ExportPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const { t } = await getServerPreferences();
   const [project, latest, tasks, flow, readiness, history] = await Promise.all([
     getProject(id),
     getLatestPrd(id),
@@ -37,11 +39,11 @@ export default async function ExportPage({
       <div className="mx-auto w-full max-w-3xl px-5 py-12 md:px-8">
         <EmptyState
           icon={Download}
-          title="Nothing to export yet"
-          description="Generate the blueprint first. Export becomes available after the PRD, flow, and tasks exist."
+          title={t("Nothing to export yet")}
+          description={t("Generate the blueprint first. Export becomes available after the PRD, flow, and tasks exist.")}
           action={
             <Link href={`/projects/${id}/interview`} className={buttonClass("primary", "md")}>
-              Go to discovery
+              {t("Go to discovery")}
             </Link>
           }
         />

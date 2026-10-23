@@ -23,7 +23,11 @@ export function buildCanvasNodes(flow: ProductFlow): FlowCanvasNode[] {
 export function edgeStyle(kind: FlowEdge["kind"]) {
   return {
     stroke:
-      kind === "failure" ? "#fb7185" : kind === "success" ? "#c6f26a" : "#4b515c",
+      kind === "failure"
+        ? "var(--danger)"
+        : kind === "success"
+          ? "var(--accent)"
+          : "var(--flow-edge)",
     strokeDasharray: kind === "failure" ? "5 4" : undefined,
     strokeWidth: kind === "default" ? 1.5 : 2,
   };
@@ -39,8 +43,8 @@ export function buildCanvasEdges(flow: ProductFlow): FlowCanvasEdge[] {
     animated: edge.kind === "failure",
     data: { kind: edge.kind },
     style: edgeStyle(edge.kind),
-    labelStyle: { fill: "#9ca3af", fontSize: 10 },
-    labelBgStyle: { fill: "#16181d", fillOpacity: 0.9 },
+    labelStyle: { fill: "var(--muted)", fontSize: 10 },
+    labelBgStyle: { fill: "var(--flow-label-bg)", fillOpacity: 0.9 },
     labelBgPadding: [4, 2] as [number, number],
     labelBgBorderRadius: 4,
   }));

@@ -18,6 +18,7 @@ import { createWireframe, createWireframeBlock } from "@/lib/wireframe";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Select, Textarea } from "@/components/ui/input";
+import { usePreferences } from "@/components/preferences-provider";
 import { WireframePreview } from "./wireframe-preview";
 
 const NODE_KINDS: FlowNodeKind[] = ["actor", "screen", "action", "decision", "system", "data", "integration"];
@@ -49,6 +50,7 @@ export function FlowInspector({
   onDelete: () => void;
   onClose: () => void;
 }) {
+  const { t } = usePreferences();
   const [blockType, setBlockType] = useState<WireframeBlockType>("header");
   const knownRequirementIds = new Set(requirements.map((requirement) => requirement.id));
   const missingRequirementIds = node?.requirementIds.filter(
@@ -61,9 +63,9 @@ export function FlowInspector({
         <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface-raised text-muted">
           <Monitor className="h-4 w-4" />
         </div>
-        <div className="mt-3 text-xs font-medium">Select a node</div>
+        <div className="mt-3 text-xs font-medium">{t("Select a node")}</div>
         <p className="mt-1 max-w-[220px] text-[10px] leading-relaxed text-muted">
-          Edit labels, link requirements, and design the wireframe for any screen node.
+          {t("Edit labels, link requirements, and design the wireframe for any screen node.")}
         </p>
       </div>
     );
@@ -77,10 +79,10 @@ export function FlowInspector({
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div>
-          <div className="text-xs font-semibold">Node inspector</div>
+          <div className="text-xs font-semibold">{t("Node inspector")}</div>
           <div className="text-[9px] uppercase tracking-[0.14em] text-muted">{node.kind}</div>
         </div>
-        <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close inspector">
+        <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label={t("Close")}>
           <X className="h-3.5 w-3.5" />
         </Button>
       </div>
@@ -88,7 +90,7 @@ export function FlowInspector({
       <div className="flex-1 space-y-4 overflow-y-auto p-4">
         <div className="space-y-3">
           <div>
-            <Label>Type</Label>
+            <Label>{t("Type")}</Label>
             <Select value={node.kind} onChange={(event) => onChange({ kind: event.target.value as FlowNodeKind })}>
               {NODE_KINDS.map((kind) => (
                 <option key={kind} value={kind}>{kind}</option>
@@ -96,25 +98,25 @@ export function FlowInspector({
             </Select>
           </div>
           <div>
-            <Label>Label</Label>
+            <Label>{t("Label")}</Label>
             <Input value={node.label} onChange={(event) => onChange({ label: event.target.value })} />
           </div>
           <div>
-            <Label>Description</Label>
+            <Label>{t("Description")}</Label>
             <Textarea rows={3} value={node.description} onChange={(event) => onChange({ description: event.target.value })} />
           </div>
         </div>
 
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <Label className="mb-0">Linked requirements</Label>
+            <Label className="mb-0">{t("Linked requirements")}</Label>
             <Badge variant="outline">{node.requirementIds.length}</Badge>
           </div>
           <div className="max-h-[180px] space-y-1 overflow-y-auto rounded-xl border border-border bg-background/40 p-2">
             {requirements.map((requirement) => {
               const checked = node.requirementIds.includes(requirement.id);
               return (
-                <label key={requirement.id} className="flex cursor-pointer items-start gap-2 rounded-lg px-1.5 py-1 hover:bg-white/[0.03]">
+                <label key={requirement.id} className="flex cursor-pointer items-start gap-2 rounded-lg px-1.5 py-1 hover:bg-foreground/[0.03]">
                   <input
                     type="checkbox"
                     checked={checked}
@@ -147,7 +149,7 @@ export function FlowInspector({
                     })
                   }
                   className="rounded-full border border-danger/30 bg-danger/[0.06] px-2 py-0.5 text-[9px] text-danger hover:bg-danger/15"
-                  title="Remove missing requirement link"
+                  title={t("Remove missing requirement link")}
                 >
                   {id} ×
                 </button>
@@ -155,14 +157,14 @@ export function FlowInspector({
             </div>
           ) : null}
           {node.kind !== "actor" && node.requirementIds.length === 0 ? (
-            <p className="mt-1.5 text-[9px] text-warning">Unlinked nodes are flagged in the readiness review.</p>
+            <p className="mt-1.5 text-[9px] text-warning">{t("Unlinked nodes are flagged in the readiness review.")}</p>
           ) : null}
         </div>
 
         {node.kind === "screen" ? (
           <div className="border-t border-border pt-4">
             <div className="mb-2 flex items-center justify-between">
-              <Label className="mb-0">Wireframe</Label>
+              <Label className="mb-0">{t("Wireframe")}</Label>
               {node.wireframe ? <Badge variant="accent">{node.wireframe.layout}</Badge> : null}
             </div>
             {node.wireframe ? (
@@ -177,12 +179,12 @@ export function FlowInspector({
                   </Select>
                   <Input
                     value={node.wireframe.title}
-                    placeholder="Screen title"
+                    placeholder={t("Screen title")}
                     onChange={(event) => updateWireframe({ title: event.target.value })}
                   />
                   <Input
                     value={node.wireframe.description}
-                    placeholder="What is this screen for?"
+                    placeholder={t("What is this screen for?")}
                     onChange={(event) => updateWireframe({ description: event.target.value })}
                   />
                 </div>
@@ -222,7 +224,7 @@ export function FlowInspector({
                         </Select>
                         <Input
                           value={block.title}
-                          placeholder="Block title"
+                          placeholder={t("Block title")}
                           onChange={(event) =>
                             updateWireframe({
                               blocks: node.wireframe!.blocks.map((item) =>
@@ -234,7 +236,7 @@ export function FlowInspector({
                         <Textarea
                           rows={3}
                           value={block.items.join("\n")}
-                          placeholder="One item per line"
+                          placeholder={t("One item per line")}
                           onChange={(event) =>
                             updateWireframe({
                               blocks: node.wireframe!.blocks.map((item) =>
@@ -261,7 +263,7 @@ export function FlowInspector({
                       updateWireframe({ blocks: [...node.wireframe!.blocks, createWireframeBlock(blockType)] })
                     }
                   >
-                    <CirclePlus className="h-3 w-3" /> Add
+                    <CirclePlus className="h-3 w-3" /> {t("Add")}
                   </Button>
                 </div>
               </div>
@@ -273,7 +275,7 @@ export function FlowInspector({
                 onClick={() => onChange({ wireframe: createWireframe("dashboard", node.label) })}
               >
                 <Monitor className="h-3.5 w-3.5" />
-                Add wireframe
+                {t("Add wireframe")}
               </Button>
             )}
           </div>
@@ -283,7 +285,7 @@ export function FlowInspector({
       <div className="border-t border-border p-3">
         <Button variant="danger" size="sm" className="w-full" onClick={onDelete}>
           <Trash2 className="h-3.5 w-3.5" />
-          Delete node
+          {t("Delete node")}
         </Button>
       </div>
     </div>

@@ -40,6 +40,7 @@ import { createWireframe } from "@/lib/wireframe";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { usePreferences } from "@/components/preferences-provider";
 import { Progress } from "@/components/ui/progress";
 import { cn, uid } from "@/lib/utils";
 import { EdgeInspector } from "./edge-inspector";
@@ -83,6 +84,7 @@ export function FlowWorkspace({
   initialReadiness: ReadinessReport;
 }) {
   const router = useRouter();
+  const { t } = usePreferences();
   const [tab, setTab] = useState<Tab>("flow");
   const [nodes, setNodes, baseOnNodesChange] = useNodesState<FlowCanvasNode>(buildCanvasNodes(initialFlow));
   const [edges, setEdges, baseOnEdgesChange] = useEdgesState<FlowCanvasEdge>(buildCanvasEdges(initialFlow));
@@ -106,12 +108,31 @@ export function FlowWorkspace({
 
   function handleNodesChange(changes: NodeChange<FlowCanvasNode>[]) {
     baseOnNodesChange(changes);
-    if (changes.some((change) => change.type !== "select")) setDirty(true);
+    if (
+      changes.some(
+        (change) =>
+          change.type === "add" ||
+          change.type === "remove" ||
+          change.type === "replace" ||
+          change.type === "position",
+      )
+    ) {
+      setDirty(true);
+    }
   }
 
   function handleEdgesChange(changes: EdgeChange<FlowCanvasEdge>[]) {
     baseOnEdgesChange(changes);
-    if (changes.some((change) => change.type !== "select")) setDirty(true);
+    if (
+      changes.some(
+        (change) =>
+          change.type === "add" ||
+          change.type === "remove" ||
+          change.type === "replace",
+      )
+    ) {
+      setDirty(true);
+    }
   }
 
   function handleConnect(connection: Connection) {
@@ -224,7 +245,7 @@ export function FlowWorkspace({
   function handleAutoLayout() {
     setNodes((current) => autoLayoutFlow(current, edges));
     setDirty(true);
-    toast.success("Canvas re-laid out.");
+    toast.success(t("Canvas re-laid out."));
   }
 
   async function saveFlow(): Promise<boolean> {
@@ -244,10 +265,10 @@ export function FlowWorkspace({
       if (!response.ok) throw new Error(payload.error || "Could not save the flow.");
       if (payload.readiness) setReadiness(payload.readiness);
       setDirty(false);
-      toast.success("Flow saved.");
+      toast.success(t("Flow saved."));
       return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not save the flow.");
+      toast.error(error instanceof Error ? error.message : t("Could not save the flow."));
       return false;
     } finally {
       setSaving(false);
@@ -276,10 +297,10 @@ export function FlowWorkspace({
       if (!response.ok) throw new Error(payload.error || "Could not apply the flow.");
       if (payload.readiness) setReadiness(payload.readiness);
       setDirty(false);
-      toast.success(`Flow applied to PRD v${payload.version}.`);
+      toast.success(t("Flow applied to PRD v{version}.", { version: payload.version ?? "" }));
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not apply the flow.");
+      toast.error(error instanceof Error ? error.message : t("Could not apply the flow."));
     } finally {
       setApplying(false);
     }
@@ -290,9 +311,9 @@ export function FlowWorkspace({
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1 rounded-xl border border-border bg-surface p-1">
           {[
-            { id: "flow" as const, label: "Product flow", icon: Workflow },
-            { id: "screens" as const, label: `Wireframes (${screenNodes.length})`, icon: Monitor },
-            { id: "tasks" as const, label: "Task flow", icon: GitBranch },
+            { id: "flow" as const, label: t("Product flow"), icon: Workflow },
+            { id: "screens" as const, label: `${t("Wireframes")} (${screenNodes.length})`, icon: Monitor },
+            { id: "tasks" as const, label: t("Task flow"), icon: GitBranch },
           ].map((item) => (
             <button
               key={item.id}
@@ -301,7 +322,7 @@ export function FlowWorkspace({
               className={cn(
                 "flex h-8 items-center gap-1.5 rounded-lg px-3 text-[11px] font-medium transition-colors",
                 tab === item.id
-                  ? "bg-white/[0.06] text-foreground"
+                  ? "bg-foreground/[0.06] text-foreground"
                   : "text-muted hover:text-foreground",
               )}
             >
@@ -316,12 +337,12 @@ export function FlowWorkspace({
             {dirty ? (
               <>
                 <span className="h-1.5 w-1.5 rounded-full bg-warning" />
-                Unsaved changes
+                {t("Unsaved changes")}
               </>
             ) : (
               <>
                 <Check className="h-3 w-3 text-success" />
-                Flow saved
+                {t("Flow saved")}
               </>
             )}
           </div>
@@ -329,7 +350,7 @@ export function FlowWorkspace({
             <div className="relative">
               <Button variant="secondary" size="sm" onClick={() => setAddOpen((value) => !value)}>
                 <CirclePlus className="h-3.5 w-3.5" />
-                Add node
+                {t("Add node")}
                 <ChevronDown className="h-3 w-3" />
               </Button>
               {addOpen ? (
@@ -337,19 +358,19 @@ export function FlowWorkspace({
                   <button
                     type="button"
                     className="fixed inset-0 z-30 cursor-default"
-                    aria-label="Close add menu"
+                    aria-label={t("Close")}
                     onClick={() => setAddOpen(false)}
                   />
-                  <div className="absolute right-0 top-full z-40 mt-1 w-44 rounded-xl border border-border bg-surface p-1 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
+                  <div className="absolute right-0 top-full z-40 mt-1 w-44 rounded-xl border border-border bg-surface p-1 shadow-[var(--card-shadow)]">
                     {NODE_KINDS.map((item) => (
                       <button
                         key={item.kind}
                         type="button"
                         onClick={() => addNode(item.kind)}
-                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[11px] text-muted-strong hover:bg-white/[0.04] hover:text-foreground"
+                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[11px] text-muted-strong hover:bg-foreground/[0.04] hover:text-foreground"
                       >
                         <span className="h-1.5 w-1.5 rounded-full bg-accent/60" />
-                        {item.label}
+                        {t(item.label)}
                       </button>
                     ))}
                   </div>
@@ -360,18 +381,18 @@ export function FlowWorkspace({
           {tab === "flow" ? (
             <Button variant="secondary" size="sm" onClick={handleAutoLayout}>
               <Wand2 className="h-3.5 w-3.5" />
-              Auto layout
+              {t("Auto layout")}
             </Button>
           ) : null}
           {tab === "flow" ? (
             <Button variant="secondary" size="sm" onClick={saveFlow} disabled={saving}>
               {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-              Save
+              {t("Save")}
             </Button>
           ) : null}
           <Button size="sm" onClick={applyToPrd} disabled={applying || saving}>
             {applying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-            Apply to PRD
+            {t("Apply to PRD")}
           </Button>
         </div>
       </div>
@@ -428,11 +449,11 @@ export function FlowWorkspace({
             {screenNodes.length === 0 ? (
               <EmptyState
                 icon={Monitor}
-                title="No wireframes yet"
-                description="Add a screen node to the product flow, then design its layout in the inspector."
+                title={t("No wireframes yet")}
+                description={t("Add a screen node to the product flow, then design its layout in the inspector.")}
                 action={
                   <Button size="sm" onClick={() => addNode("screen")}>
-                    <CirclePlus className="h-3.5 w-3.5" /> Add screen
+                    <CirclePlus className="h-3.5 w-3.5" /> {t("Add screen")}
                   </Button>
                 }
               />
@@ -453,7 +474,7 @@ export function FlowWorkspace({
                       <div className="min-w-0">
                         <div className="truncate text-xs font-medium">{node.data.node.label}</div>
                         <div className="mt-0.5 truncate text-[10px] text-muted">
-                          {node.data.node.wireframe?.description || "No screen description"}
+                          {node.data.node.wireframe?.description || t("No screen description")}
                         </div>
                       </div>
                       <Badge variant="outline">{node.data.node.requirementIds.length} FR</Badge>
@@ -480,12 +501,12 @@ export function FlowWorkspace({
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-surface/70 px-4 py-2.5">
             <div className="flex items-center gap-2 text-[11px] text-muted">
               <GitBranch className="h-3.5 w-3.5 text-accent" />
-              Execution graph · dependency order · critical path highlighted
+              {t("Execution graph · dependency order · critical path highlighted")}
             </div>
             <div className="flex items-center gap-3 text-[10px] text-muted">
-              <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-accent" /> Critical path</span>
+              <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-accent" /> {t("Critical path")}</span>
               <Link href={`/projects/${project.id}/tasks`} className="inline-flex items-center gap-1 text-accent hover:underline">
-                Open task list <ArrowRight className="h-2.5 w-2.5" />
+                {t("Open task list")} <ArrowRight className="h-2.5 w-2.5" />
               </Link>
             </div>
           </div>
@@ -499,11 +520,11 @@ export function FlowWorkspace({
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-surface/50 px-4 py-3">
           <div className="flex items-center gap-2 text-[11px] text-muted">
             <AlertTriangle className="h-3.5 w-3.5 text-warning" />
-            {readiness.issues.filter((issue) => issue.severity === "blocker").length} blockers ·{" "}
+            {readiness.issues.filter((issue) => issue.severity === "blocker").length} {t("blockers")} ·{" "}
             {readiness.issues.filter((issue) => issue.severity === "major").length} major issues
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-muted">Readiness {readiness.score}%</span>
+            <span className="text-[10px] text-muted">{t("Readiness")} {readiness.score}%</span>
             <Progress value={readiness.score} className="w-24" indicatorClassName={readiness.canExport ? "bg-accent" : "bg-warning"} />
             <Link href={`/projects/${project.id}/review`} className="text-[10px] text-accent hover:underline">
               Review

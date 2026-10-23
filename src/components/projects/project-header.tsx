@@ -16,6 +16,7 @@ import type { ProjectDetail } from "@/lib/types";
 import { PRODUCT_TYPE_ICONS } from "@/lib/constants";
 import { StatusBadge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
+import { usePreferences } from "@/components/preferences-provider";
 import { cn } from "@/lib/utils";
 
 const tabs = [
@@ -29,6 +30,7 @@ const tabs = [
 
 export function ProjectHeader({ project }: { project: ProjectDetail }) {
   const pathname = usePathname();
+  const { t } = usePreferences();
   const base = `/projects/${project.id}`;
   const Icon = PRODUCT_TYPE_ICONS[project.productType] ?? LayoutDashboard;
 
@@ -40,7 +42,7 @@ export function ProjectHeader({ project }: { project: ProjectDetail }) {
             <Link
               href="/"
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-muted transition-colors hover:text-foreground"
-              aria-label="Back to projects"
+              aria-label={t("Back to projects")}
             >
               <ArrowLeft className="h-3.5 w-3.5" />
             </Link>
@@ -55,18 +57,18 @@ export function ProjectHeader({ project }: { project: ProjectDetail }) {
                 <StatusBadge status={project.status} />
               </div>
               <div className="mt-0.5 flex items-center gap-2 text-[10px] text-muted">
-                <span>{project.productType}</span>
+                <span>{t(project.productType)}</span>
                 <span className="h-0.5 w-0.5 rounded-full bg-muted" />
-                <span>Readiness {project.readiness}%</span>
+                <span>{t("Readiness")} {project.readiness}%</span>
                 <span className="h-0.5 w-0.5 rounded-full bg-muted" />
-                <span>PRD v{project.prdVersion ?? "—"}</span>
+                <span>{t("PRD")} v{project.prdVersion ?? "—"}</span>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Link href={`${base}/export`} className={buttonClass("secondary", "sm")}>
               <Download className="h-3.5 w-3.5" />
-              Export
+              {t("Export")}
             </Link>
           </div>
         </div>
@@ -83,11 +85,11 @@ export function ProjectHeader({ project }: { project: ProjectDetail }) {
                   "relative flex h-9 items-center gap-1.5 whitespace-nowrap rounded-t-lg px-3 text-xs font-medium transition-colors",
                   active
                     ? "text-foreground"
-                    : "text-muted hover:bg-white/[0.03] hover:text-foreground",
+                    : "text-muted hover:bg-foreground/[0.03] hover:text-foreground",
                 )}
               >
                 <tab.icon className={cn("h-3.5 w-3.5", active ? "text-accent" : "text-muted")} />
-                {tab.label}
+                {t(tab.label)}
                 {active ? (
                   <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-accent" />
                 ) : null}

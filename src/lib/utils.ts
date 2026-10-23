@@ -18,30 +18,30 @@ export function slugify(value: string): string {
     .slice(0, 60) || "project";
 }
 
-export function formatDate(value: string | Date | null | undefined): string {
+export function formatDate(value: string | Date | null | undefined, language: "en" | "id" = "en"): string {
   if (!value) return "—";
   const date = typeof value === "string" ? new Date(value) : value;
   if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat(language === "id" ? "id-ID" : "en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
   }).format(date);
 }
 
-export function formatRelative(value: string | Date | null | undefined): string {
+export function formatRelative(value: string | Date | null | undefined, language: "en" | "id" = "en"): string {
   if (!value) return "—";
   const date = typeof value === "string" ? new Date(value) : value;
   if (Number.isNaN(date.getTime())) return "—";
   const diff = Date.now() - date.getTime();
   const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 1) return language === "id" ? "baru saja" : "just now";
+  if (minutes < 60) return language === "id" ? `${minutes} menit lalu` : `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return language === "id" ? `${hours} jam lalu` : `${hours}h ago`;
   const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  return formatDate(date);
+  if (days < 30) return language === "id" ? `${days} hari lalu` : `${days}d ago`;
+  return formatDate(date, language);
 }
 
 export function truncate(value: string, length = 160): string {

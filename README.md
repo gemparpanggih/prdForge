@@ -22,7 +22,7 @@ The PRD is the source of truth. Canvas edits can be applied back to the PRD thro
 
 ---
 
-## Stack
+## Tech Stack
 
 | Layer | Choice |
 | --- | --- |
@@ -40,7 +40,7 @@ PGlite keeps the local setup to `npm install && npm run dev` while preserving Po
 
 ---
 
-## Run locally
+## Quick Start
 
 Requirements: **Node.js 24+** and npm.
 

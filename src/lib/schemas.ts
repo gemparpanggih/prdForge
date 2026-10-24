@@ -328,14 +328,14 @@ export const taskUpdateSchema = z.object({
 });
 
 export const credentialSchema = z.object({
-  provider: z.enum(["openai", "openrouter", "anthropic", "google", "ollama", "custom"]),
+  provider: z.enum(["openai", "openrouter", "anthropic", "google", "ollama", "ollama-cloud", "custom"]),
   apiKey: z.string().default(""),
   baseUrl: z.string().default(""),
   model: z.string().default(""),
 });
 
 export const settingsUpdateSchema = z.object({
-  defaultProvider: z.enum(["openai", "openrouter", "anthropic", "google", "ollama", "custom"]),
+  defaultProvider: z.enum(["openai", "openrouter", "anthropic", "google", "ollama", "ollama-cloud", "custom"]),
   defaultModel: z.string().default(""),
   budgetUsd: z.number().min(0).max(10000).default(10),
 });

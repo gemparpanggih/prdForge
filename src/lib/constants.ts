@@ -126,6 +126,15 @@ export const PROVIDERS: ProviderConfig[] = [
     icon: Server,
   },
   {
+    id: "ollama-cloud",
+    name: "Ollama Cloud",
+    description: "Cloud-hosted Ollama models using an API key.",
+    defaultBaseUrl: "https://ollama.com/v1",
+    defaultModel: "gemma4:31b",
+    requiresKey: true,
+    icon: Cloud,
+  },
+  {
     id: "custom",
     name: "Custom endpoint",
     description: "Any OpenAI-compatible chat completions endpoint.",

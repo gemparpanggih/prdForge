@@ -39,6 +39,30 @@ describe("AI provider adapters", () => {
     });
   });
 
+  it("calls Ollama Cloud through the OpenAI-compatible endpoint with a bearer token", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json({
+        choices: [{ message: { content: "ollama cloud" } }],
+        usage: { prompt_tokens: 11, completion_tokens: 5 },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const result = await callProvider(
+      {
+        provider: "ollama-cloud",
+        apiKey: "ollama-cloud-key",
+        baseUrl: "https://ollama.com/v1",
+        model: "gemma4:31b",
+      },
+      [{ role: "user", content: "hi" }],
+    );
+    expect(result.text).toBe("ollama cloud");
+    expect(fetchMock.mock.calls[0][0]).toBe("https://ollama.com/v1/chat/completions");
+    expect((fetchMock.mock.calls[0][1] as RequestInit).headers).toMatchObject({
+      Authorization: "Bearer ollama-cloud-key",
+    });
+  });
+
   it("calls Anthropic Messages and normalizes a /v1 base URL", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       Response.json({

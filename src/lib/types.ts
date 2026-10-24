@@ -6,6 +6,7 @@ export type ProviderId =
   | "anthropic"
   | "google"
   | "ollama"
+  | "ollama-cloud"
   | "custom";
 
 export type ProjectStatus =

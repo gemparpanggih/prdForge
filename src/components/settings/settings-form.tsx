@@ -338,11 +338,38 @@ export function SettingsForm({
                   onChange={(event) => setForm({ ...form, baseUrl: event.target.value })}
                   placeholder={provider.defaultBaseUrl || "https://…/v1"}
                 />
-                <p className="mt-1 text-[10px] text-muted">
-                  {selected === "ollama"
-                    ? t("Point this at your local Ollama OpenAI-compatible endpoint.")
-                    : t("Must implement the provider's chat/messages API. Used only from the local server.")}
-                </p>
+                {selected === "ollama-cloud" ? null : (
+                  <p className="mt-1 text-[10px] text-muted">
+                    {selected === "ollama"
+                      ? t("Point this at your local Ollama OpenAI-compatible endpoint.")
+                      : t("Must implement the provider's chat/messages API. Used only from the local server.")}
+                  </p>
+                )}
+                {selected === "ollama-cloud" ? (
+                  <div className="mt-2 rounded-lg border border-accent/15 bg-accent/[0.03] p-2.5 text-[10px] leading-relaxed text-muted">
+                    <div>
+                      {t("Ollama Cloud uses an OpenAI-compatible endpoint at ollama.com/v1. Create an API key, then enter a cloud model ID such as gemma4:31b.")}
+                    </div>
+                    <div className="mt-1.5 flex flex-wrap gap-3">
+                      <a
+                        href="https://ollama.com/settings/keys"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-accent hover:underline"
+                      >
+                        {t("Get API key")}
+                      </a>
+                      <a
+                        href="https://ollama.com/search?c=cloud"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-accent hover:underline"
+                      >
+                        {t("Browse cloud models")}
+                      </a>
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               {activeCredential?.lastValidatedAt ? (

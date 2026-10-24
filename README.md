@@ -32,7 +32,7 @@ The PRD is the source of truth. Canvas edits can be applied back to the PRD thro
 | ORM | Drizzle ORM with versioned SQL migrations |
 | Canvas | React Flow (`@xyflow/react`) |
 | Validation | Zod |
-| AI | Direct provider adapters for OpenAI-compatible, Anthropic, and Google Gemini APIs |
+| AI | Direct provider adapters for OpenAI-compatible, Anthropic, Google Gemini, and Ollama Cloud APIs |
 | Export | JSZip, pure Markdown renderers |
 | Tests | Vitest |
 
@@ -62,9 +62,12 @@ Open **Settings**, choose a provider, and save:
 - Anthropic
 - Google Gemini
 - Ollama (local, no key required)
+- Ollama Cloud (API key required)
 - Any custom OpenAI-compatible endpoint
 
 The model name and base URL are editable. Use the exact model identifier accepted by the provider.
+
+For **Ollama Cloud**, PRD Forge uses the OpenAI-compatible endpoint `https://ollama.com/v1` and sends your API key as a Bearer token. Create a key at [ollama.com/settings/keys](https://ollama.com/settings/keys), then enter a cloud model ID such as `gemma4:31b`. Cloud model IDs can be browsed at [ollama.com/search?c=cloud](https://ollama.com/search?c=cloud).
 
 Without a provider, the deterministic local engine produces a complete blueprint. It is useful for demos, offline work, and testing. When a provider is configured but a stage fails, PRD Forge falls back to the local engine and records a warning instead of losing the project.
 

@@ -755,6 +755,14 @@ const id: Record<string, string> = {
     "Model Gemini melalui Generative Language API.",
   "Local models with an OpenAI-compatible endpoint.":
     "Model lokal dengan endpoint OpenAI-compatible.",
+  "Cloud-hosted Ollama models using an API key.":
+    "Model Ollama yang di-host di cloud menggunakan API key.",
+  "Create an API key at ollama.com/settings/keys, then choose a model ID from the cloud model list.":
+    "Buat API key di ollama.com/settings/keys, lalu pilih ID model dari daftar model cloud.",
+  "Browse cloud models": "Lihat model cloud",
+  "Get API key": "Dapatkan API key",
+  "Ollama Cloud uses an OpenAI-compatible endpoint at ollama.com/v1. Create an API key, then enter a cloud model ID such as gemma4:31b.":
+    "Ollama Cloud memakai endpoint OpenAI-compatible di ollama.com/v1. Buat API key, lalu masukkan ID model cloud seperti gemma4:31b.",
   "Ollama (local)": "Ollama (lokal)",
   "Custom endpoint": "Endpoint kustom",
   "Any OpenAI-compatible chat completions endpoint.":

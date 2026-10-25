@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { PRODUCT_TYPES } from "@/lib/constants";
+import { AUTO_TECH_PRESET_ID, CUSTOM_TECH_PRESET_ID, TECH_MODE_OPTIONS, TECH_PRESET_MAP, TECH_PRESETS, type TechStackMode } from "@/lib/tech-presets";
 import type { ProjectSummary } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Label, Textarea } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { usePreferences } from "@/components/preferences-provider";
 
 const EXAMPLES = [
@@ -48,7 +50,11 @@ export function NewProjectForm({ initialType }: { initialType?: string }) {
   const [name, setName] = useState("");
   const [productType, setProductType] = useState(initialType || "CRM");
   const [summary, setSummary] = useState("");
+  const [techMode, setTechMode] = useState<TechStackMode>("auto");
+  const [techPresetId, setTechPresetId] = useState("nextjs-postgres");
+  const [customStack, setCustomStack] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const selectedTechPreset = TECH_PRESET_MAP[techPresetId] ?? TECH_PRESETS[0];
 
   function applyExample(example: (typeof EXAMPLES)[number]) {
     setName(example.name);
@@ -66,12 +72,27 @@ export function NewProjectForm({ initialType }: { initialType?: string }) {
       toast.error(t("Add a short brief so the interview has context."));
       return;
     }
+    if (techMode === "custom" && customStack.trim().length < 3) {
+      toast.error(t("Describe the custom stack when the custom option is selected."));
+      return;
+    }
     setSubmitting(true);
     try {
       const response = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, productType, summary }),
+        body: JSON.stringify({
+          name,
+          productType,
+          summary,
+          techPreset:
+            techMode === "auto"
+              ? AUTO_TECH_PRESET_ID
+              : techMode === "custom"
+                ? CUSTOM_TECH_PRESET_ID
+                : techPresetId,
+          customStack: techMode === "custom" ? customStack : "",
+        }),
       });
       const payload = (await response.json()) as ProjectSummary & { error?: string };
       if (!response.ok) throw new Error(payload.error || t("Could not create the project."));
@@ -151,6 +172,99 @@ export function NewProjectForm({ initialType }: { initialType?: string }) {
                 <span>{t("A paragraph is enough. Be specific about the user and the pain.")}</span>
                 <span>{summary.length}/4000</span>
               </div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-surface/50 p-4">
+              <div>
+                <Label className="mb-0">{t("Tech stack & environment")}</Label>
+                <p className="mt-1 text-[11px] leading-relaxed text-muted">
+                  {t("Choose how the technical blueprint should be built.")}
+                </p>
+              </div>
+
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                {TECH_MODE_OPTIONS.map((option) => {
+                  const active = techMode === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => setTechMode(option.id)}
+                      className={`rounded-xl border p-3 text-left transition-colors ${active ? "border-accent/40 bg-accent/[0.05]" : "border-border bg-background/40 hover:border-border-strong"}`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`text-xs font-medium ${active ? "text-foreground" : "text-muted-strong"}`}>{t(option.label)}</span>
+                        {active ? <Check className="h-3.5 w-3.5 text-accent" /> : null}
+                      </div>
+                      <p className="mt-1 text-[10px] leading-relaxed text-muted">{t(option.description)}</p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {techMode === "preset" ? (
+                <div className="mt-3 space-y-3">
+                  <div>
+                    <Label htmlFor="tech-preset">{t("Preset stack")}</Label>
+                    <select
+                      id="tech-preset"
+                      value={techPresetId}
+                      onChange={(event) => setTechPresetId(event.target.value)}
+                      className="h-10 w-full appearance-none rounded-xl border border-border bg-background/60 px-3 pr-9 text-sm text-foreground focus-visible:border-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/20"
+                    >
+                      {TECH_PRESETS.map((preset) => (
+                        <option key={preset.id} value={preset.id}>
+                          {preset.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="rounded-xl border border-border bg-background/40 p-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-medium text-foreground">{selectedTechPreset.name}</span>
+                      <Badge variant="outline">{t(selectedTechPreset.category)}</Badge>
+                    </div>
+                    <p className="mt-1.5 text-[11px] leading-relaxed text-muted">{t(selectedTechPreset.summary)}</p>
+                    <div className="mt-2.5 flex flex-wrap gap-1">
+                      {selectedTechPreset.stack.slice(0, 5).map((item) => (
+                        <Badge key={item.layer} variant="muted">
+                          {item.choice}
+                        </Badge>
+                      ))}
+                      {selectedTechPreset.stack.length > 5 ? (
+                        <Badge variant="muted">+{selectedTechPreset.stack.length - 5}</Badge>
+                      ) : null}
+                    </div>
+                    <p className="mt-2 text-[10px] leading-relaxed text-muted">
+                      <span className="text-muted-strong">{t("Environment")}:</span>{" "}
+                      {selectedTechPreset.environment}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+
+              {techMode === "custom" ? (
+                <div className="mt-3">
+                  <Label htmlFor="custom-stack">{t("Custom stack description")}</Label>
+                  <Textarea
+                    id="custom-stack"
+                    rows={4}
+                    value={customStack}
+                    onChange={(event) => setCustomStack(event.target.value)}
+                    placeholder={t("e.g. Laravel 12 + MySQL + Redis, deployed with Docker on a VPS. Must use Inertia + React.")}
+                    maxLength={4000}
+                  />
+                  <p className="mt-1.5 text-[10px] leading-relaxed text-muted">
+                    {t("The local engine records this as a project constraint. AI mode receives it as a hard requirement.")}
+                  </p>
+                </div>
+              ) : null}
+
+              {techMode === "auto" ? (
+                <p className="mt-3 rounded-xl border border-border bg-background/40 p-3 text-[10px] leading-relaxed text-muted">
+                  {t("The AI decides the stack. The local engine uses a project-type heuristic: web products default to Next.js + PostgreSQL, mobile products to React Native + Supabase.")}
+                </p>
+              ) : null}
             </div>
 
             <div>

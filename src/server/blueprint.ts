@@ -7,6 +7,7 @@ import type {
   Wireframe,
 } from "@/lib/types";
 import { buildLocalBlueprint } from "@/lib/draft";
+import { resolveTechStack, type ResolvedTechStack } from "@/lib/tech-presets";
 import {
   FLOW_SYSTEM_PROMPT,
   PRD_SYSTEM_PROMPT,
@@ -226,7 +227,11 @@ function normalizeFlow(
   return { nodes, edges };
 }
 
-function normalizePrd(prd: PRDContent, projectName: string): PRDContent {
+function normalizePrd(
+  prd: PRDContent,
+  projectName: string,
+  tech: ResolvedTechStack,
+): PRDContent {
   const today = new Date().toISOString().slice(0, 10);
   const requirementIds = new Set<string>();
   for (const requirement of prd.functionalRequirements) {
@@ -266,6 +271,23 @@ function normalizePrd(prd: PRDContent, projectName: string): PRDContent {
       },
     ];
   }
+  if (tech.mode !== "auto") {
+    prd.technical.stack = tech.stack.some((item) =>
+      item.layer.toLowerCase().includes("observability"),
+    )
+      ? tech.stack
+      : [
+          ...tech.stack,
+          {
+            layer: "Observability",
+            choice: "Structured logs, metrics, and error tracking",
+            rationale:
+              "Trace failed writes, authorization decisions, and operational regressions.",
+          },
+        ];
+    prd.technical.deployment = tech.deployment;
+    prd.technical.overview = tech.summary;
+  }
   return prd;
 }
 
@@ -274,6 +296,10 @@ export async function generateBlueprint(projectId: string): Promise<BlueprintRes
   if (!project) throw new Error("Project not found.");
   const answers = await getInterviewAnswers(projectId);
   const progress = await getInterviewProgress(projectId);
+  const tech = resolveTechStack(
+    { techPreset: project.techPreset, customStack: project.customStack },
+    project.productType,
+  );
   const local = buildLocalBlueprint(project.brief, answers);
   const warnings: string[] = [];
   const ai = await resolveAIConfig();
@@ -299,11 +325,11 @@ export async function generateBlueprint(projectId: string): Promise<BlueprintRes
       const result = await generateStructured(
         ai.config,
         PRD_SYSTEM_PROMPT,
-        buildPrdUserPrompt(project.brief, answers, progress.coverage),
+        buildPrdUserPrompt(project.brief, answers, progress.coverage, tech),
         prdContentSchema,
         { temperature: 0.2 },
       );
-      aiPrd = normalizePrd(result.data, project.name);
+      aiPrd = normalizePrd(result.data, project.name, tech);
       await recordGenerationRun({
         projectId,
         stage: "prd",

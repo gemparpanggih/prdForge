@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS projects (
   slug TEXT NOT NULL UNIQUE,
   product_type TEXT NOT NULL,
   summary TEXT NOT NULL,
+  tech_preset TEXT NOT NULL DEFAULT 'auto',
+  custom_stack TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL DEFAULT 'interview',
   readiness INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -140,3 +142,7 @@ CREATE TABLE IF NOT EXISTS health_check (
   id TEXT PRIMARY KEY,
   ok BOOLEAN NOT NULL DEFAULT TRUE
 );
+
+-- Backward-compatible additions for local databases created before project-level tech presets.
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS tech_preset TEXT NOT NULL DEFAULT 'auto';
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS custom_stack TEXT NOT NULL DEFAULT '';

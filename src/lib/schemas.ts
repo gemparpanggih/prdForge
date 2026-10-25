@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AUTO_TECH_PRESET_ID, CUSTOM_TECH_PRESET_ID, TECH_PRESET_IDS } from "./tech-presets";
 
 const stringList = z.array(z.string()).default([]);
 
@@ -294,11 +295,33 @@ export const interviewQuestionPayloadSchema = z.object({
   mode: z.enum(["ai", "local"]).default("ai"),
 });
 
-export const projectCreateSchema = z.object({
-  name: z.string().trim().min(2).max(120),
-  productType: z.string().trim().min(2).max(80),
-  summary: z.string().trim().min(10).max(4000),
-});
+export const projectCreateSchema = z
+  .object({
+    name: z.string().trim().min(2).max(120),
+    productType: z.string().trim().min(2).max(80),
+    summary: z.string().trim().min(10).max(4000),
+    techPreset: z
+      .string()
+      .trim()
+      .default(AUTO_TECH_PRESET_ID)
+      .refine(
+        (value) =>
+          value === AUTO_TECH_PRESET_ID ||
+          value === CUSTOM_TECH_PRESET_ID ||
+          TECH_PRESET_IDS.includes(value),
+        "Unknown tech stack preset.",
+      ),
+    customStack: z.string().trim().max(4000).default(""),
+  })
+  .refine(
+    (value) =>
+      value.techPreset !== CUSTOM_TECH_PRESET_ID ||
+      value.customStack.length >= 3,
+    {
+      message: "Describe the custom stack when the custom option is selected.",
+      path: ["customStack"],
+    },
+  );
 
 export const interviewRespondSchema = z.object({
   answers: z

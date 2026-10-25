@@ -559,6 +559,58 @@ const id: Record<string, string> = {
   "A database operation failed. Check the server console for details.":
     "Operasi database gagal. Periksa console server untuk detail.",
   "404": "404",
+
+  // Tech stack selection
+  "Tech stack & environment": "Tech stack & environment",
+  "Choose how the technical blueprint should be built.":
+    "Pilih bagaimana technical blueprint akan dibangun.",
+  Auto: "Otomatis",
+  Preset: "Preset",
+  Custom: "Custom",
+  "Let the AI choose the stack. The local engine uses a project-type heuristic.":
+    "Biarkan AI memilih stack. Local engine memakai heuristik berdasarkan jenis produk.",
+  "Choose a popular stack and environment.": "Pilih stack dan environment yang populer.",
+  "Describe your own stack and deployment environment.":
+    "Jelaskan stack dan environment deployment Anda sendiri.",
+  "Preset stack": "Stack preset",
+  Environment: "Lingkungan",
+  "Custom stack description": "Deskripsi stack custom",
+  "e.g. Laravel 12 + MySQL + Redis, deployed with Docker on a VPS. Must use Inertia + React.":
+    "Contoh: Laravel 12 + MySQL + Redis, di-deploy dengan Docker di VPS. Wajib memakai Inertia + React.",
+  "The local engine records this as a project constraint. AI mode receives it as a hard requirement.":
+    "Local engine mencatat ini sebagai constraint proyek. Mode AI menerimanya sebagai requirement wajib.",
+  "The AI decides the stack. The local engine uses a project-type heuristic: web products default to Next.js + PostgreSQL, mobile products to React Native + Supabase.":
+    "AI yang menentukan stack. Local engine memakai heuristik jenis produk: produk web default ke Next.js + PostgreSQL, produk mobile ke React Native + Supabase.",
+  "Describe the custom stack when the custom option is selected.":
+    "Jelaskan stack custom saat opsi custom dipilih.",
+  "Custom stack": "Stack custom",
+  web: "web",
+  backend: "backend",
+  mobile: "mobile",
+  serverless: "serverless",
+  content: "konten",
+  "A modern full-stack TypeScript web application with a managed PostgreSQL database.":
+    "Aplikasi web full-stack TypeScript modern dengan database PostgreSQL terkelola.",
+  "A React single-page application backed by a Node.js/Express API and MongoDB.":
+    "Aplikasi React single-page dengan API Node.js/Express dan MongoDB.",
+  "A Laravel monolith with a server-rendered or Inertia-powered UI and MySQL.":
+    "Monolith Laravel dengan UI server-rendered atau Inertia dan MySQL.",
+  "A Django application with server-rendered pages or HTMX and PostgreSQL.":
+    "Aplikasi Django dengan halaman server-rendered atau HTMX dan PostgreSQL.",
+  "A typed Python API with a React SPA and PostgreSQL.":
+    "API Python bertipe dengan React SPA dan PostgreSQL.",
+  "A Rails monolith using Hotwire for interactivity and PostgreSQL.":
+    "Monolith Rails dengan Hotwire untuk interaktivitas dan PostgreSQL.",
+  "A Java/Spring Boot service with a React or server-rendered UI and PostgreSQL.":
+    "Service Java/Spring Boot dengan UI React atau server-rendered dan PostgreSQL.",
+  "A cross-platform mobile app with Expo and Supabase for auth, data, and storage.":
+    "Aplikasi mobile cross-platform dengan Expo dan Supabase untuk auth, data, dan storage.",
+  "A cross-platform Flutter app backed by Firebase authentication, Firestore, and cloud functions.":
+    "Aplikasi Flutter cross-platform dengan Firebase Authentication, Firestore, dan cloud functions.",
+  "A TypeScript serverless application using AWS Lambda, API Gateway, DynamoDB, and Cognito.":
+    "Aplikasi serverless TypeScript dengan AWS Lambda, API Gateway, DynamoDB, dan Cognito.",
+  "A content-led Astro site with a headless CMS and CDN delivery.":
+    "Situs Astro berbasis konten dengan headless CMS dan delivery via CDN.",
   Problem: "Masalah",
   "Goals & metrics": "Tujuan & metrik",
   Journeys: "Journey",
@@ -779,7 +831,6 @@ const id: Record<string, string> = {
   Education: "Pendidikan",
   Logistics: "Logistik",
   "Custom Product": "Produk Kustom",
-  Custom: "Kustom",
   "Internal tool": "Tool internal",
 
   // Coverage descriptions

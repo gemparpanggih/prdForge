@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { ProjectDetail } from "@/lib/types";
 import { PRODUCT_TYPE_ICONS } from "@/lib/constants";
+import { getTechPresetLabel } from "@/lib/tech-presets";
 import { StatusBadge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { usePreferences } from "@/components/preferences-provider";
@@ -33,6 +34,7 @@ export function ProjectHeader({ project }: { project: ProjectDetail }) {
   const { t } = usePreferences();
   const base = `/projects/${project.id}`;
   const Icon = PRODUCT_TYPE_ICONS[project.productType] ?? LayoutDashboard;
+  const stackLabel = t(getTechPresetLabel(project.techPreset));
 
   return (
     <header className="sticky top-14 z-20 border-b border-border bg-background/80 backdrop-blur-xl lg:top-0">
@@ -62,6 +64,8 @@ export function ProjectHeader({ project }: { project: ProjectDetail }) {
                 <span>{t("Readiness")} {project.readiness}%</span>
                 <span className="h-0.5 w-0.5 rounded-full bg-muted" />
                 <span>{t("PRD")} v{project.prdVersion ?? "—"}</span>
+                <span className="h-0.5 w-0.5 rounded-full bg-muted" />
+                <span className="hidden sm:inline">{t("Stack")}: {stackLabel}</span>
               </div>
             </div>
           </div>

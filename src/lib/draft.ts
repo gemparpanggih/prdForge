@@ -22,12 +22,15 @@ import type {
   WireframeBlockType,
 } from "./types";
 import { ALL_COVERAGE_KEYS, emptyCoverage, getInterviewQuestion } from "./constants";
+import { resolveTechStack, type ResolvedTechStack } from "./tech-presets";
 import { slugify, uid } from "./utils";
 
 type ProjectBrief = {
   name: string;
   productType: string;
   summary: string;
+  techPreset?: string;
+  customStack?: string;
 };
 
 type FeatureSpec = {
@@ -362,7 +365,7 @@ function requirementId(index: number): string {
   return `FR-${String(index + 1).padStart(3, "0")}`;
 }
 
-function buildRequirements(features: FeatureSpec[]): Requirement[] {
+function buildRequirements(features: FeatureSpec[], databaseLabel: string): Requirement[] {
   return features.map((feature, index) => ({
     id: requirementId(index),
     title: feature.title,
@@ -371,7 +374,7 @@ function buildRequirements(features: FeatureSpec[]): Requirement[] {
     acceptanceCriteria: [
       `A permitted user can complete the "${feature.title}" workflow and receives a clear success confirmation.`,
       `Invalid input is rejected with field-level errors and no partial record is persisted.`,
-      `Saved changes use PostgreSQL as the source of truth and remain correct after reload.`,
+      `Saved changes use ${databaseLabel} as the source of truth and remain correct after reload.`,
       `A user without the required role receives a 403 response and sees no restricted data.`,
     ],
     edgeCases: [
@@ -550,6 +553,7 @@ function buildFlow(
   personas: Persona[],
   wireframes: ReturnType<typeof buildWireframes>,
   primaryEntity?: string,
+  databaseLabel = "PostgreSQL",
 ): ProductFlow {
   const primary = personas[0]?.name ?? "Primary User";
   const admin = personas[1]?.name ?? "Administrator";
@@ -563,7 +567,7 @@ function buildFlow(
     { id: "node-form", kind: "screen", label: `Create ${entityLabel}`, description: "Validated creation form with inline error handling.", x: 560, y: 340, requirementIds: requirement(0), wireframe: wireframes.form },
     { id: "node-decision", kind: "decision", label: "Input valid?", description: "Validate required fields, permissions, and duplicate constraints.", x: 560, y: 40, requirementIds: requirement(0) },
     { id: "node-api", kind: "system", label: "Application API", description: "Authorizes the request, applies validation, and persists changes.", x: 860, y: 40, requirementIds: requirement(0) },
-    { id: "node-db", kind: "data", label: "PostgreSQL", description: "System of record with migrations, constraints, and audit history.", x: 1160, y: 40, requirementIds: [] },
+    { id: "node-db", kind: "data", label: databaseLabel, description: `${databaseLabel} system of record with migrations, constraints, and audit history.`, x: 1160, y: 40, requirementIds: [] },
     { id: "node-detail", kind: "screen", label: "Record detail", description: "Read-only and editable detail view with activity and next actions.", x: 860, y: 340, requirementIds: requirement(1), wireframe: wireframes.detail },
     { id: "node-admin", kind: "actor", label: admin, description: "Configures roles, integrations, and workspace settings.", x: 0, y: 620, requirementIds: [] },
     { id: "node-settings", kind: "screen", label: "Workspace settings", description: "Administrative settings for access, notifications, and integrations.", x: 260, y: 620, requirementIds: requirement(6), wireframe: wireframes.settings },
@@ -588,11 +592,12 @@ function buildFlow(
   return { nodes, edges };
 }
 
-function agentPrompt(task: Task, prdTitle: string): string {
+function agentPrompt(task: Task, prdTitle: string, tech: ResolvedTechStack): string {
   return [
     `You are implementing ${task.id}: ${task.title} for "${prdTitle}".`,
     "",
     "Before writing code, read PRD.md, ARCHITECTURE.md, TASKS.md, and AGENTS.md in the project bundle.",
+    `Selected stack: ${tech.name}. Database: ${tech.database}. Follow the architecture and stack constraints in the bundle.`,
     `Requirement links: ${task.requirementIds.join(", ") || "foundation work"}.`,
     "",
     "Scope:",
@@ -616,7 +621,12 @@ function agentPrompt(task: Task, prdTitle: string): string {
   ].join("\n");
 }
 
-function buildTasks(features: FeatureSpec[], requirements: Requirement[], project: ProjectBrief): Task[] {
+function buildTasks(
+  features: FeatureSpec[],
+  requirements: Requirement[],
+  project: ProjectBrief,
+  tech: ResolvedTechStack,
+): Task[] {
   const title = project.name;
   const foundation: Task[] = [
     {
@@ -872,7 +882,7 @@ function buildTasks(features: FeatureSpec[], requirements: Requirement[], projec
   const tasks = [...foundation, ...featureTasks, ...hardening];
   return tasks.map((task) => ({
     ...task,
-    agentPrompt: agentPrompt(task, title),
+    agentPrompt: agentPrompt(task, title, tech),
   }));
 }
 
@@ -946,6 +956,7 @@ function buildBlueprintContent(
   flow: ProductFlow,
   personas: Persona[],
   entities: DataEntity[],
+  tech: ResolvedTechStack,
 ): PRDContent {
   const answers = answerMap(answersInput);
   const metrics = buildMetrics(answers);
@@ -1004,9 +1015,9 @@ function buildBlueprintContent(
         "Advanced analytics and forecasting.",
         "Third-party marketplace or partner portal.",
       ]),
-      assumptions: assumptions.length ? assumptions : ["The first release is a web application with a single shared workspace.", "English is the only required interface language.", "The team can use managed infrastructure for email and payments if needed."],
-      constraints: splitList(answerText(answers, "constraints"), ["Small delivery team.", "First release must ship within one quarter.", "Use the existing engineering stack and deployment environment."]),
-      dependencies: splitList(answerText(answers, "integrations"), ["PostgreSQL for persistence.", "An email provider for transactional notifications.", "A payment provider if paid plans are enabled."]),
+      assumptions: assumptions.length ? assumptions : [`The first release follows the selected stack: ${tech.name}.`, "English is the only required interface language for the generated blueprint.", "The team can use managed infrastructure for email and payments if needed."],
+      constraints: splitList(answerText(answers, "constraints"), ["Small delivery team.", "First release must ship within one quarter.", `Use ${tech.name} and the documented environment constraints.`]),
+      dependencies: splitList(answerText(answers, "integrations"), [`${tech.database} for persistence.`, "An email provider for transactional notifications.", "A payment provider if paid plans are enabled."]),
     },
     functionalRequirements: requirements,
     nonFunctionalRequirements: buildNFRs(),
@@ -1036,17 +1047,10 @@ function buildBlueprintContent(
       ],
     },
     technical: {
-      overview: `A server-rendered web application with a PostgreSQL system of record, a stateless API layer, and a responsive client. The design prioritizes a small operational surface, strong authorization boundaries, and observability.`,
+      overview: `${tech.summary} The system uses ${tech.database} as the system of record and prioritizes a small operational surface, strong authorization boundaries, and observability.`,
       stack: [
-        { layer: "Application", choice: "Next.js with TypeScript", rationale: "Server rendering, route handlers, and a single deployable unit." },
-        { layer: "Database", choice: "PostgreSQL", rationale: "Relational integrity, transactions, and mature operational tooling." },
-        { layer: "Data access", choice: "Drizzle ORM", rationale: "Typed schema and explicit migrations." },
-        { layer: "UI", choice: "Tailwind CSS and accessible primitives", rationale: "Consistent design tokens with a small runtime." },
-        { layer: "Validation", choice: "Zod", rationale: "Shared request and response validation at the boundary." },
-        { layer: "Authentication", choice: "Session-based auth with role checks", rationale: "Simple, auditable access control." },
-        { layer: "Testing", choice: "Vitest and Playwright", rationale: "Fast unit tests plus deterministic end-to-end coverage." },
-        { layer: "Deployment", choice: "Containerized application", rationale: "Reproducible local and production environments." },
-        { layer: "Observability", choice: "Structured logs and metrics", rationale: "Trace failed writes and authorization decisions." },
+        ...tech.stack,
+        { layer: "Observability", choice: "Structured logs, metrics, and error tracking", rationale: "Trace failed writes, authorization decisions, and operational regressions." },
       ],
       dataModel: entities,
       apiEndpoints: buildApiEndpoints(features[0]?.title ?? "records", features[1]?.title ?? "activities"),
@@ -1062,7 +1066,7 @@ function buildBlueprintContent(
         "Rate limiting on authentication and write-heavy endpoints.",
         "Immutable audit events for administrative and security-sensitive changes.",
       ],
-      deployment: "Containerized application and PostgreSQL with a documented migration step, health check, backup schedule, and rollback procedure. Secrets are injected at runtime.",
+      deployment: `${tech.deployment} Include a documented migration step, health check, backup schedule, and rollback procedure. Secrets are injected at runtime.`,
     },
     risks: buildRisks(project.productType),
     openQuestions,
@@ -1091,16 +1095,18 @@ export type LocalBlueprint = {
   prd: PRDContent;
   tasks: Task[];
   flow: ProductFlow;
+  tech: ResolvedTechStack;
 };
 
 export function buildLocalBlueprint(project: ProjectBrief, answers: InterviewAnswer[]): LocalBlueprint {
+  const tech = resolveTechStack(project, project.productType);
   const features = catalogFor(project.productType);
   const personas = personasFor(project.productType);
   const entities = entitiesFor(project.productType);
-  const requirements = buildRequirements(features);
-  const tasks = buildTasks(features, requirements, project);
+  const requirements = buildRequirements(features, tech.database);
+  const tasks = buildTasks(features, requirements, project, tech);
   const wireframes = buildWireframes(features, entities);
-  const flow = buildFlow(features, personas, wireframes, entities[0]?.name);
+  const flow = buildFlow(features, personas, wireframes, entities[0]?.name, tech.database);
 
   for (const node of flow.nodes) {
     for (const requirement of requirements) {
@@ -1110,8 +1116,8 @@ export function buildLocalBlueprint(project: ProjectBrief, answers: InterviewAns
     }
   }
 
-  const prd = buildBlueprintContent(project, answers, features, requirements, tasks, flow, personas, entities);
-  return { prd, tasks, flow };
+  const prd = buildBlueprintContent(project, answers, features, requirements, tasks, flow, personas, entities, tech);
+  return { prd, tasks, flow, tech };
 }
 
 export function updateCoverage(

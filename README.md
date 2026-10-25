@@ -71,6 +71,16 @@ For **Ollama Cloud**, PRD Forge uses the OpenAI-compatible endpoint `https://oll
 
 Without a provider, the deterministic local engine produces a complete blueprint. It is useful for demos, offline work, and testing. When a provider is configured but a stage fails, PRD Forge falls back to the local engine and records a warning instead of losing the project.
 
+### Tech stack presets
+
+Every project can choose how the technical blueprint is produced:
+
+- **Auto** — the AI chooses the most appropriate stack. The local engine uses a project-type heuristic: web products default to Next.js + PostgreSQL; mobile products default to React Native + Supabase.
+- **Preset** — choose a popular stack and environment: Next.js + PostgreSQL, MERN + Docker, Laravel + MySQL, Django + PostgreSQL, FastAPI + React, Rails + PostgreSQL, Spring Boot + PostgreSQL, React Native + Supabase, Flutter + Firebase, Serverless AWS, or Astro + Headless CMS.
+- **Custom** — describe your own stack and deployment environment in free text.
+
+The selection is a project-level constraint. It is applied to the local engine and passed to the AI as a hard requirement, so the PRD, architecture, requirements, flow, and task prompts stay aligned. The selected stack is shown in the project header and can be inspected in the Technical section of the PRD. Manual technical edits are still possible, but regenerating the blueprint applies the project constraint again.
+
 Provider keys are encrypted with AES-256-GCM before they are written to the database. The raw key is never returned to the browser. If `APP_ENCRYPTION_KEY` is not set, a 32-byte key is generated at `.data/master.key` with mode `0600`.
 
 ### Theme and language

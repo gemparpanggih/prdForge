@@ -23,6 +23,8 @@ export const projects = pgTable("projects", {
   slug: text("slug").notNull().unique(),
   productType: text("product_type").notNull(),
   summary: text("summary").notNull(),
+  techPreset: text("tech_preset").notNull().default("auto"),
+  customStack: text("custom_stack").notNull().default(""),
   status: text("status").$type<ProjectStatus>().notNull().default("interview"),
   readiness: integer("readiness").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

@@ -385,6 +385,8 @@ export type ProjectSummary = {
   slug: string;
   productType: string;
   summary: string;
+  techPreset: string;
+  customStack: string;
   status: ProjectStatus;
   readiness: number;
   createdAt: string;
@@ -443,6 +445,8 @@ export type ProjectInput = {
   name: string;
   productType: string;
   summary: string;
+  techPreset?: string;
+  customStack?: string;
 };
 
 export type ProjectDetail = ProjectSummary & {
@@ -450,6 +454,8 @@ export type ProjectDetail = ProjectSummary & {
     name: string;
     productType: string;
     summary: string;
+    techPreset: string;
+    customStack: string;
   };
   prdVersion: number | null;
   prdStatus: PRDContent["metadata"]["status"] | null;
